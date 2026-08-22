@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Karachi'
 
 USE_I18N = True
 
@@ -141,16 +141,31 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Store / checkout settings
-SHIPPING_FLAT_RATE = Decimal(os.getenv('SHIPPING_FLAT_RATE', '200.00'))
-FREE_SHIPPING_THRESHOLD = Decimal(os.getenv('FREE_SHIPPING_THRESHOLD', '5000.00'))
-WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '923001234567')
+# Punjab & other non-remote cities = 280; Sindh / Balochistan / KPK = 350.
+SHIPPING_NEARBY_RATE = Decimal(os.getenv('SHIPPING_NEARBY_RATE', '280.00'))  # Punjab
+SHIPPING_OTHER_RATE = Decimal(os.getenv('SHIPPING_OTHER_RATE', '350.00'))  # remote provinces
+WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '923177478167')
+CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', 'scentraryv@gmail.com')
+ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_EMAIL)
+
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', CONTACT_EMAIL)
+# Gmail App Passwords are often copied with spaces; strip them.
+EMAIL_HOST_PASSWORD = (os.getenv('EMAIL_HOST_PASSWORD', '') or '').replace(' ', '').strip()
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+if EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 BANK_DETAILS = {
-    'bank_name': os.getenv('BANK_NAME', 'HBL — Habib Bank Limited'),
-    'account_title': os.getenv('BANK_ACCOUNT_TITLE', 'Scentra Ryv'),
-    'account_number': os.getenv('BANK_ACCOUNT_NUMBER', '1234567890123456'),
-    'iban': os.getenv('BANK_IBAN', 'PK00HABB0000001123456702'),
-    'branch_code': os.getenv('BANK_BRANCH_CODE', '0123'),
+    'bank_name': os.getenv('BANK_NAME', 'MCB Islamic'),
+    'account_title': os.getenv('BANK_ACCOUNT_TITLE', 'Majid Kamal'),
+    'account_number': os.getenv('BANK_ACCOUNT_NUMBER', '3131007420090002'),
+    'iban': os.getenv('BANK_IBAN', 'PK75MCIB3131007420090002'),
+    'branch_code': os.getenv('BANK_BRANCH_CODE', '313'),
 }
 
 # Default primary key field type

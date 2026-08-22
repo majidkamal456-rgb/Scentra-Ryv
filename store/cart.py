@@ -1,7 +1,3 @@
-from decimal import Decimal
-
-from django.conf import settings
-
 from .models import Product
 
 CART_SESSION_KEY = 'store_cart'
@@ -75,16 +71,16 @@ class Cart:
     def get_subtotal(self):
         return sum(item['line_total'] for item in self)
 
-    def get_shipping(self):
-        subtotal = self.get_subtotal()
-        flat_rate = getattr(settings, 'SHIPPING_FLAT_RATE', Decimal('200.00'))
-        free_threshold = getattr(settings, 'FREE_SHIPPING_THRESHOLD', Decimal('5000.00'))
-        if subtotal >= free_threshold:
-            return Decimal('0.00')
-        return flat_rate
+    def get_shipping(self, city=None):
+        from .shipping import calculate_shipping
+        return calculate_shipping(len(self), city=city)
 
-    def get_total(self):
-        return self.get_subtotal() + self.get_shipping()
+    def get_shipping_range(self):
+        from .shipping import shipping_range
+        return shipping_range(len(self))
+
+    def get_total(self, city=None):
+        return self.get_subtotal() + self.get_shipping(city)
 
     def is_empty(self):
         return len(self.cart) == 0

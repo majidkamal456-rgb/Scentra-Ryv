@@ -1,34 +1,44 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<!-- Hero Slider -->
+<!-- Hero -->
 <section class="hero-swiper swiper">
   <div class="swiper-wrapper">
     <div class="swiper-slide">
-      <div class="absolute inset-0 bg-gradient-to-r from-brand-black via-brand-black/80 to-transparent"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(201,164,76,0.08),transparent_70%)]"></div>
-      <div class="relative z-10 mx-auto max-w-7xl px-4 text-center lg:px-8">
-        <p class="mb-4 text-xs uppercase tracking-[0.4em] text-brand-gold">Essence & Elixir</p>
-        <h1 class="font-serif text-5xl md:text-7xl text-brand-cream">Scentra Ryv</h1>
-        <p class="mx-auto mt-6 max-w-xl text-brand-cream/70">Luxury fragrances that linger like a whispered promise. Discover our curated collection of elixirs.</p>
-        <a href="{% url 'store:shop' %}" class="btn-gold-filled mt-10 inline-block">Shop Now</a>
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(201,164,76,0.16),transparent_55%)]"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-brand-black/20 via-transparent to-brand-black/90"></div>
+      <div class="absolute inset-0 bg-vignette"></div>
+      <div class="relative z-10 mx-auto max-w-4xl px-4 text-center lg:px-8">
+        <img src="{% static 'images/logo-mark.png' %}" alt="" class="mx-auto mb-8 h-20 w-auto animate-float opacity-95 drop-shadow-[0_0_30px_rgba(201,164,76,0.35)] md:h-24" width="72" height="100" decoding="async">
+        <p class="section-eyebrow mb-5 animate-fade-in">Essence &amp; Elixir</p>
+        <h1 class="font-display text-5xl font-semibold tracking-[0.08em] text-gradient-gold md:text-7xl lg:text-8xl">Scentra Ryv</h1>
+        <p class="mx-auto mt-7 max-w-lg text-base leading-relaxed text-brand-cream/65 md:text-lg">Luxury fragrances that linger like a whispered promise.</p>
+        <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <a href="{% url 'store:shop' %}" class="btn-gold-filled">Shop Collection</a>
+          <a href="{% url 'store:about' %}" class="btn-gold">Our Story</a>
+        </div>
       </div>
     </div>
     <div class="swiper-slide">
-      <div class="absolute inset-0 bg-gradient-to-b from-brand-charcoal to-brand-black"></div>
-      <div class="relative z-10 mx-auto max-w-7xl px-4 text-center lg:px-8">
-        <h2 class="font-serif text-4xl md:text-6xl text-brand-gold">The Art of Oud</h2>
-        <p class="mx-auto mt-6 max-w-lg text-brand-cream/70">Rare ingredients, masterfully blended for an unforgettable signature.</p>
+      <div class="absolute inset-0 bg-gradient-to-br from-brand-charcoal via-brand-black to-brand-ink"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,rgba(201,164,76,0.12),transparent_50%)]"></div>
+      <div class="relative z-10 mx-auto max-w-3xl px-4 text-center lg:px-8">
+        <p class="section-eyebrow mb-4">Crafted Rare</p>
+        <h2 class="font-serif text-4xl text-brand-cream md:text-6xl">The Art of Oud</h2>
+        <p class="mx-auto mt-6 max-w-md text-brand-cream/60">Rare ingredients, masterfully blended for an unforgettable signature.</p>
         <a href="{% url 'store:shop' %}" class="btn-gold mt-10 inline-block">Explore Collection</a>
       </div>
     </div>
     <div class="swiper-slide">
-      <div class="absolute inset-0 bg-gradient-to-tr from-brand-black to-brand-charcoal"></div>
-      <div class="relative z-10 mx-auto max-w-7xl px-4 text-center lg:px-8">
-        <h2 class="font-serif text-4xl md:text-6xl text-brand-cream">Cash on Delivery</h2>
-        <p class="mx-auto mt-6 max-w-lg text-brand-cream/70">Order with confidence. Pay when your fragrance arrives at your doorstep.</p>
+      <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-ink to-brand-charcoal"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(201,164,76,0.1),transparent_60%)]"></div>
+      <div class="relative z-10 mx-auto max-w-3xl px-4 text-center lg:px-8">
+        <p class="section-eyebrow mb-4">Shop with Ease</p>
+        <h2 class="font-serif text-4xl text-brand-cream md:text-6xl">Cash on Delivery</h2>
+        <p class="mx-auto mt-6 max-w-md text-brand-cream/60">Order with confidence. Pay when your fragrance arrives at your doorstep.</p>
         <a href="{% url 'store:shop' %}" class="btn-gold-filled mt-10 inline-block">Shop Now</a>
       </div>
     </div>
@@ -36,93 +46,108 @@
   <div class="swiper-pagination"></div>
 </section>
 
-<!-- Our Collection -->
-<section class="fade-section mx-auto max-w-7xl px-4 py-24 lg:px-8">
+<!-- Collection -->
+<section class="fade-section page-shell">
   <div class="text-center">
-    <h2 class="section-heading">Our Collection</h2>
+    <p class="section-eyebrow">Curated</p>
+    <h2 class="section-heading mt-3">Our Collection</h2>
     <div class="gold-divider"></div>
-    <p class="mx-auto max-w-2xl text-brand-cream/60">Six exquisite fragrances, each a journey through rare notes and timeless elegance.</p>
+    <p class="mx-auto max-w-xl text-brand-mute">Six exquisite fragrances — each a journey through rare notes and timeless elegance.</p>
   </div>
-  <div class="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="stagger-children mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
     {% for product in products %}
       {% include 'store/partials/product_card.html' %}
     {% empty %}
-      <p class="col-span-full text-center text-brand-cream/50">No products yet. Run <code class="text-brand-gold">python manage.py seed_products</code></p>
+      <p class="col-span-full text-center text-brand-mute">No products yet. Run <code class="text-brand-gold">python manage.py seed_products</code></p>
     {% endfor %}
   </div>
-  <div class="mt-12 text-center">
+  <div class="mt-14 text-center">
     <a href="{% url 'store:shop' %}" class="btn-gold">View All Fragrances</a>
   </div>
 </section>
 
-<!-- Why Scentra Ryv -->
-<section class="fade-section border-y border-brand-gold/10 bg-brand-charcoal py-24">
+<!-- Why -->
+<section class="fade-section border-y border-brand-gold/10 bg-brand-ink/60 py-20 lg:py-24">
   <div class="mx-auto max-w-7xl px-4 lg:px-8">
     <div class="text-center">
-      <h2 class="section-heading">Why Scentra Ryv</h2>
+      <p class="section-eyebrow">The Difference</p>
+      <h2 class="section-heading mt-3">Why Scentra Ryv</h2>
       <div class="gold-divider"></div>
     </div>
-    <div class="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-brand-gold/30 text-brand-gold">
-          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div class="stagger-children mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="feature-tile group">
+        <div class="feature-tile__icon">
+          <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
         <h3 class="font-serif text-xl text-brand-cream">Long-lasting</h3>
-        <p class="mt-2 text-sm text-brand-cream/50">Premium concentration for all-day presence</p>
+        <p class="mt-2 text-sm text-brand-mute">Premium concentration for all-day presence</p>
       </div>
-      <div class="text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-brand-gold/30 text-brand-gold">
-          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+      <div class="feature-tile group">
+        <div class="feature-tile__icon">
+          <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
         </div>
         <h3 class="font-serif text-xl text-brand-cream">Premium Ingredients</h3>
-        <p class="mt-2 text-sm text-brand-cream/50">Rare oud, amber, and botanical extracts</p>
+        <p class="mt-2 text-sm text-brand-mute">Rare oud, amber, and botanical extracts</p>
       </div>
-      <div class="text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-brand-gold/30 text-brand-gold">
-          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <div class="feature-tile group">
+        <div class="feature-tile__icon">
+          <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         </div>
         <h3 class="font-serif text-xl text-brand-cream">Cash on Delivery</h3>
-        <p class="mt-2 text-sm text-brand-cream/50">Pay when your order arrives</p>
+        <p class="mt-2 text-sm text-brand-mute">Pay when your order arrives</p>
       </div>
-      <div class="text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-brand-gold/30 text-brand-gold">
-          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      <div class="feature-tile group">
+        <div class="feature-tile__icon">
+          <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         </div>
         <h3 class="font-serif text-xl text-brand-cream">Easy Returns</h3>
-        <p class="mt-2 text-sm text-brand-cream/50">Hassle-free support via WhatsApp</p>
+        <p class="mt-2 text-sm text-brand-mute">Hassle-free support via WhatsApp</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- Testimonials -->
-<section class="fade-section mx-auto max-w-7xl px-4 py-24 lg:px-8">
+<section class="fade-section page-shell">
   <div class="text-center">
-    <h2 class="section-heading">What Our Clients Say</h2>
+    <p class="section-eyebrow">Voices</p>
+    <h2 class="section-heading mt-3">What Our Clients Say</h2>
     <div class="gold-divider"></div>
   </div>
   <div class="testimonial-swiper swiper mt-12">
     <div class="swiper-wrapper">
       <div class="swiper-slide px-4">
-        <blockquote class="mx-auto max-w-2xl text-center">
-          <p class="font-serif text-2xl italic text-brand-cream/90">"Celestial Oud is absolutely divine. I've never received so many compliments."</p>
-          <footer class="mt-6 text-sm text-brand-gold">— Ayesha K., Lahore</footer>
+        <blockquote class="mx-auto max-w-2xl border border-brand-gold/10 bg-brand-charcoal/40 px-8 py-12 text-center backdrop-blur-sm">
+          <p class="font-serif text-2xl italic leading-relaxed text-brand-cream/90 md:text-3xl">"AL-FAKHAMA is absolutely divine. I've never received so many compliments on a fragrance."</p>
+          <footer class="mt-8 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Ayesha K. · Lahore</footer>
         </blockquote>
       </div>
       <div class="swiper-slide px-4">
-        <blockquote class="mx-auto max-w-2xl text-center">
-          <p class="font-serif text-2xl italic text-brand-cream/90">"The packaging alone feels luxury. Obsidian Crown is my new signature scent."</p>
-          <footer class="mt-6 text-sm text-brand-gold">— Hassan M., Karachi</footer>
+        <blockquote class="mx-auto max-w-2xl border border-brand-gold/10 bg-brand-charcoal/40 px-8 py-12 text-center backdrop-blur-sm">
+          <p class="font-serif text-2xl italic leading-relaxed text-brand-cream/90 md:text-3xl">"The packaging alone feels luxury. Amition X is my new signature scent."</p>
+          <footer class="mt-8 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Hassan M. · Karachi</footer>
         </blockquote>
       </div>
       <div class="swiper-slide px-4">
-        <blockquote class="mx-auto max-w-2xl text-center">
-          <p class="font-serif text-2xl italic text-brand-cream/90">"COD made it so easy to try. Golden Dusk is pure elegance in a bottle."</p>
-          <footer class="mt-6 text-sm text-brand-gold">— Sara R., Islamabad</footer>
+        <blockquote class="mx-auto max-w-2xl border border-brand-gold/10 bg-brand-charcoal/40 px-8 py-12 text-center backdrop-blur-sm">
+          <p class="font-serif text-2xl italic leading-relaxed text-brand-cream/90 md:text-3xl">"COD made it so easy to try. Crush On You is pure elegance in a bottle."</p>
+          <footer class="mt-8 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Sara R. · Islamabad</footer>
+        </blockquote>
+      </div>
+      <div class="swiper-slide px-4">
+        <blockquote class="mx-auto max-w-2xl border border-brand-gold/10 bg-brand-charcoal/40 px-8 py-12 text-center backdrop-blur-sm">
+          <p class="font-serif text-2xl italic leading-relaxed text-brand-cream/90 md:text-3xl">"Eloura smells so fresh and feminine. Prime Ryv is perfect for my husband too."</p>
+          <footer class="mt-8 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Fatima Z. · Multan</footer>
+        </blockquote>
+      </div>
+      <div class="swiper-slide px-4">
+        <blockquote class="mx-auto max-w-2xl border border-brand-gold/10 bg-brand-charcoal/40 px-8 py-12 text-center backdrop-blur-sm">
+          <p class="font-serif text-2xl italic leading-relaxed text-brand-cream/90 md:text-3xl">"Tazkiah lasts all day. Strong, classy, and worth every rupee."</p>
+          <footer class="mt-8 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Bilal A. · Faisalabad</footer>
         </blockquote>
       </div>
     </div>
-    <div class="swiper-pagination mt-8"></div>
+    <div class="swiper-pagination !relative mt-10"></div>
   </div>
 </section>
 {% endblock %}
@@ -131,14 +156,16 @@
 <script>
   new Swiper('.hero-swiper', {
     loop: true,
-    autoplay: { delay: 5000, disableOnInteraction: false },
+    autoplay: { delay: 5500, disableOnInteraction: false },
     effect: 'fade',
     fadeEffect: { crossFade: true },
+    speed: 900,
     pagination: { el: '.hero-swiper .swiper-pagination', clickable: true },
   });
   new Swiper('.testimonial-swiper', {
     loop: true,
-    autoplay: { delay: 6000 },
+    autoplay: { delay: 6500 },
+    speed: 700,
     pagination: { el: '.testimonial-swiper .swiper-pagination', clickable: true },
   });
 </script>

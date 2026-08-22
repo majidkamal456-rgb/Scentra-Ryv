@@ -1,0 +1,27 @@
+New order booked — {{ order.order_number }}
+
+Booking date: {{ booked_date }}
+Booking time: {{ booked_time }} (Pakistan time)
+
+CUSTOMER DETAILS
+----------------
+Name: {{ order.full_name }}
+Phone: {{ order.phone }}
+Email: {{ order.email|default:"Not provided" }}
+City: {{ order.city }}
+Address: {{ order.address }}
+{% if order.notes %}Notes: {{ order.notes }}{% endif %}
+
+PRODUCT DETAILS
+---------------
+{% for item in items %}
+- {{ item.product_name }} ({{ item.size_ml }}) × {{ item.quantity }} — Rs. {{ item.line_total|floatformat:0 }}
+{% endfor %}
+
+PAYMENT & TOTALS
+----------------
+Payment method: {{ order.get_payment_method_display }}
+Status: {{ order.get_status_display }}
+Subtotal: Rs. {{ order.subtotal|floatformat:0 }}
+Shipping: Rs. {{ order.shipping|floatformat:0 }}
+Total: Rs. {{ order.total_amount|floatformat:0 }}

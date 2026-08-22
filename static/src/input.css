@@ -8,68 +8,275 @@
   }
 
   body {
-    @apply bg-brand-black text-brand-cream font-sans antialiased;
+    @apply bg-brand-black font-sans text-brand-cream antialiased;
+    background-image: theme('backgroundImage.mesh-gold');
+    background-attachment: fixed;
   }
 
   ::selection {
-    @apply bg-brand-gold/30 text-brand-cream;
+    @apply bg-brand-gold/35 text-brand-cream;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-gold/50 ring-offset-2 ring-offset-brand-black;
   }
 }
 
 @layer components {
-  .form-input {
-    @apply w-full rounded-none border border-brand-gold/30 bg-brand-charcoal px-4 py-3 text-brand-cream
-      placeholder:text-brand-cream/40 transition focus:border-brand-gold focus:outline-none focus:ring-1 focus:ring-brand-gold/50;
+  /* —— Surfaces —— */
+  .surface {
+    @apply border border-brand-gold/15 bg-brand-charcoal/80 shadow-inset backdrop-blur-sm;
   }
 
+  .surface-elevated {
+    @apply border border-brand-gold/20 bg-brand-mist/90 shadow-lift backdrop-blur-md;
+  }
+
+  .page-shell {
+    @apply relative mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-20;
+  }
+
+  .page-hero {
+    @apply relative overflow-hidden border-b border-brand-gold/10 pb-12 pt-10 text-center;
+  }
+
+  /* —— Forms —— */
+  .form-input {
+    @apply w-full border border-brand-gold/25 bg-brand-ink/80 px-4 py-3.5 text-brand-cream
+      placeholder:text-brand-mute/60 transition duration-300 ease-luxe
+      hover:border-brand-gold/40 focus:border-brand-gold focus:outline-none
+      focus:ring-1 focus:ring-brand-gold/40;
+  }
+
+  .form-input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .form-input[type='number']::-webkit-inner-spin-button,
+  .form-input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .form-label {
+    @apply mb-2 block text-[11px] uppercase tracking-[0.22em] text-brand-mute;
+  }
+
+  /* —— Quantity stepper —— */
+  .qty-stepper {
+    @apply inline-flex h-11 items-center rounded-full border border-brand-gold/25 p-1;
+    background: linear-gradient(180deg, rgba(245, 241, 232, 0.07) 0%, rgba(245, 241, 232, 0.02) 100%);
+    box-shadow: inset 0 1px 0 rgba(245, 241, 232, 0.08), 0 10px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  .qty-stepper__btn {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-gold;
+    transition: background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .qty-stepper__btn:hover:not(:disabled) {
+    @apply bg-brand-gold text-brand-black shadow-gold;
+  }
+
+  .qty-stepper__btn:active:not(:disabled) {
+    transform: scale(0.9);
+  }
+
+  .qty-stepper__btn:focus-visible {
+    @apply outline-none ring-1 ring-brand-gold/60 ring-offset-1 ring-offset-brand-charcoal;
+  }
+
+  .qty-stepper__btn:disabled {
+    @apply cursor-not-allowed opacity-25;
+  }
+
+  .qty-stepper__value {
+    @apply min-w-[2.25rem] select-none text-center font-serif text-xl tabular-nums tracking-wide text-brand-cream;
+  }
+
+  /* —— Buttons —— */
   .btn-gold {
-    @apply relative inline-flex items-center justify-center border border-brand-gold bg-transparent px-8 py-3
-      text-sm uppercase tracking-[0.2em] text-brand-gold transition duration-300
-      hover:bg-brand-gold hover:text-brand-black hover:shadow-gold;
+    @apply relative inline-flex items-center justify-center border border-brand-gold/80
+      bg-transparent px-8 py-3.5 text-xs font-medium uppercase tracking-[0.22em] text-brand-gold
+      transition duration-500 ease-luxe hover:border-brand-gold hover:bg-brand-gold
+      hover:text-brand-black hover:shadow-gold;
   }
 
   .btn-gold-filled {
-    @apply relative inline-flex items-center justify-center border border-brand-gold bg-brand-gold px-8 py-3
-      text-sm uppercase tracking-[0.2em] text-brand-black transition duration-300
-      hover:bg-brand-gold-light hover:border-brand-gold-light hover:shadow-gold;
+    @apply relative inline-flex items-center justify-center border border-transparent
+      px-8 py-3.5 text-xs font-medium uppercase tracking-[0.22em] text-brand-black
+      transition duration-500 ease-luxe hover:shadow-gold hover:brightness-110;
+    background-image: linear-gradient(135deg, #a8842f 0%, #c9a44c 40%, #e0c06a 50%, #c9a44c 60%, #a8842f 100%);
+    background-size: 200% auto;
+  }
+
+  .btn-gold-filled:hover {
+    background-position: right center;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 text-xs uppercase tracking-[0.2em]
+      text-brand-mute transition hover:text-brand-gold;
+  }
+
+  /* —— Typography —— */
+  .section-eyebrow {
+    @apply text-[11px] uppercase tracking-[0.35em] text-brand-gold;
   }
 
   .section-heading {
-    @apply font-serif text-4xl md:text-5xl text-brand-cream tracking-wide;
+    @apply font-serif text-4xl tracking-wide text-brand-cream md:text-5xl lg:text-[3.25rem];
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(180deg, #f6e4a4 0%, #c9a44c 48%, #a07b2e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .gold-divider {
     @apply mx-auto my-6 h-px w-24 bg-gradient-to-r from-transparent via-brand-gold to-transparent;
   }
 
+  /* —— Product card —— */
   .product-card {
-    @apply relative overflow-hidden border border-brand-gold/10 bg-brand-charcoal transition duration-500
-      hover:-translate-y-1 hover:border-brand-gold/40 hover:shadow-gold;
+    @apply relative flex flex-col overflow-hidden border border-brand-gold/10 bg-brand-charcoal/70
+      transition duration-700 ease-luxe;
+  }
+
+  .product-card:hover {
+    @apply -translate-y-1.5 border-brand-gold/35 shadow-gold-soft;
+  }
+
+  .product-card__media {
+    @apply relative block aspect-[3/4] overflow-hidden bg-brand-ink;
+  }
+
+  .product-card__media img {
+    @apply h-full w-full object-cover object-center transition duration-1000 ease-luxe;
+  }
+
+  .product-card:hover .product-card__media img {
+    transform: scale(1.06);
+  }
+
+  .product-card__badge {
+    @apply absolute left-3 top-3 border border-brand-gold/30 bg-brand-black/70 px-2.5 py-1
+      text-[10px] uppercase tracking-[0.2em] text-brand-gold backdrop-blur-md;
+  }
+
+  /* —— Brand lockup —— */
+  .brand-lockup {
+    @apply flex items-center gap-3;
+  }
+
+  .brand-lockup__mark {
+    @apply block h-11 w-auto shrink-0 sm:h-12;
+    background: transparent;
+    filter: drop-shadow(0 0 8px rgba(201, 164, 76, 0.28));
+    transition: filter 0.35s ease, transform 0.35s ease;
+  }
+
+  .brand-lockup:hover .brand-lockup__mark {
+    filter: drop-shadow(0 0 14px rgba(201, 164, 76, 0.5));
+    transform: scale(1.04);
+  }
+
+  .brand-lockup--footer .brand-lockup__mark {
+    @apply h-14;
+  }
+
+  .brand-lockup__name {
+    @apply block whitespace-nowrap font-display text-[1.05rem] font-semibold leading-none tracking-[0.14em] sm:text-[1.15rem];
+    background: linear-gradient(180deg, #f6e4a4 0%, #c9a44c 48%, #a07b2e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .brand-lockup__tagline {
+    @apply mt-1.5 flex items-center gap-2 text-[9px] uppercase tracking-[0.34em] text-brand-gold/70;
+  }
+
+  .brand-lockup__tagline::before,
+  .brand-lockup__tagline::after {
+    content: '★';
+    @apply text-[7px] text-brand-gold/80;
+  }
+
+  .brand-emblem {
+    @apply h-44 w-auto md:h-56;
+    background: transparent;
+    filter: drop-shadow(0 0 28px rgba(201, 164, 76, 0.22));
+  }
+
+  /* —— Nav —— */
+  .site-header {
+    @apply sticky top-0 z-50 border-b border-brand-gold/10 bg-brand-black/70 backdrop-blur-xl;
   }
 
   .nav-link {
-    @apply relative text-sm uppercase tracking-[0.15em] text-brand-cream/80 transition hover:text-brand-gold;
+    @apply relative text-[11px] uppercase tracking-[0.2em] text-brand-cream/70 transition duration-300 hover:text-brand-gold;
   }
 
   .nav-link::after {
     content: '';
-    @apply absolute -bottom-1 left-0 h-px w-0 bg-brand-gold transition-all duration-300;
+    @apply absolute -bottom-1 left-1/2 h-px w-0 -translate-x-1/2 bg-brand-gold transition-all duration-300;
   }
 
   .nav-link:hover::after {
     @apply w-full;
   }
 
+  .cart-trigger {
+    @apply relative flex h-10 w-10 items-center justify-center border border-transparent text-brand-cream/80
+      transition duration-300 hover:border-brand-gold/30 hover:text-brand-gold;
+  }
+
+  /* —— Motion —— */
   .fade-section {
-    @apply opacity-0 translate-y-6 transition-all duration-700 ease-out;
+    @apply translate-y-8 opacity-0 transition-all duration-700 ease-luxe;
   }
 
   .fade-section.visible {
-    @apply opacity-100 translate-y-0;
+    @apply translate-y-0 opacity-100;
   }
 
+  .stagger-children > *:nth-child(1) { transition-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { transition-delay: 80ms; }
+  .stagger-children > *:nth-child(3) { transition-delay: 160ms; }
+  .stagger-children > *:nth-child(4) { transition-delay: 240ms; }
+  .stagger-children > *:nth-child(5) { transition-delay: 320ms; }
+  .stagger-children > *:nth-child(6) { transition-delay: 400ms; }
+
+  /* —— Feature / filter chips —— */
+  .chip {
+    @apply border border-brand-gold/25 px-4 py-2 text-[11px] uppercase tracking-[0.18em]
+      text-brand-cream/70 transition duration-300 hover:border-brand-gold hover:text-brand-gold;
+  }
+
+  .chip-active {
+    @apply border-brand-gold bg-brand-gold text-brand-black hover:border-brand-gold hover:text-brand-black;
+  }
+
+  .feature-tile {
+    @apply relative overflow-hidden border border-brand-gold/10 bg-brand-ink/50 p-8 text-center
+      transition duration-500 ease-luxe hover:border-brand-gold/30 hover:bg-brand-charcoal/80;
+  }
+
+  .feature-tile__icon {
+    @apply mx-auto mb-5 flex h-14 w-14 items-center justify-center border border-brand-gold/25 text-brand-gold
+      transition duration-500 group-hover:border-brand-gold group-hover:shadow-gold-soft;
+  }
+
+  /* —— Toast —— */
   .toast {
-    @apply fixed right-4 top-24 z-[100] min-w-[280px] border border-brand-gold/30 bg-brand-charcoal px-5 py-4 text-sm shadow-lift;
+    @apply min-w-[280px] border border-brand-gold/30 bg-brand-charcoal/95 px-5 py-4 text-sm shadow-lift backdrop-blur-md;
   }
 
   .toast-success {
@@ -79,29 +286,65 @@
   .toast-error {
     @apply border-red-400/50 text-red-300;
   }
+
+  /* —— Cart line —— */
+  .cart-line {
+    @apply flex gap-5 border border-brand-gold/10 bg-brand-charcoal/60 p-5 transition duration-300
+      hover:border-brand-gold/25 sm:p-6;
+  }
 }
 
+/* —— Atmosphere noise —— */
+.site-noise {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* —— Swiper —— */
 .swiper-pagination-bullet {
-  background: rgba(201, 164, 76, 0.4) !important;
+  background: rgba(201, 164, 76, 0.35) !important;
   opacity: 1 !important;
+  width: 6px !important;
+  height: 6px !important;
+  transition: width 0.35s ease, background 0.35s ease !important;
 }
 
 .swiper-pagination-bullet-active {
-  background: #C9A44C !important;
+  background: #c9a44c !important;
+  width: 22px !important;
+  border-radius: 4px !important;
 }
 
 .hero-swiper .swiper-slide {
-  @apply relative flex min-h-[85vh] items-center justify-center bg-brand-charcoal;
+  @apply relative flex min-h-[88vh] items-center justify-center overflow-hidden bg-brand-ink;
+}
+
+.hero-swiper .swiper-pagination {
+  bottom: 2rem !important;
 }
 
 .product-gallery .swiper-button-next,
 .product-gallery .swiper-button-prev,
+.related-swiper .swiper-button-next,
+.related-swiper .swiper-button-prev,
 .hero-swiper .swiper-button-next,
 .hero-swiper .swiper-button-prev {
-  color: #C9A44C !important;
+  color: #c9a44c !important;
 }
 
 .swiper-button-next::after,
 .swiper-button-prev::after {
-  font-size: 1.5rem !important;
+  font-size: 1.25rem !important;
+}
+
+.product-gallery {
+  @apply overflow-hidden border border-brand-gold/15 bg-brand-ink;
+}
+
+.product-gallery img {
+  @apply transition duration-700 ease-luxe;
 }

@@ -1,6 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
-  <circle cx="100" cy="100" r="88" stroke="#C9A44C" stroke-width="1.5" opacity="0.6"/>
-  <circle cx="100" cy="100" r="72" stroke="#C9A44C" stroke-width="1" opacity="0.4"/>
-  <path d="M100 55 C100 55 85 85 85 105 C85 125 100 145 100 145 C100 145 115 125 115 105 C115 85 100 55 100 55Z" fill="#C9A44C"/>
-  <path d="M100 70 C100 70 92 90 92 102 C92 114 100 128 100 128 C100 128 108 114 108 102 C108 90 100 70 100 70Z" fill="#0a0a0a" opacity="0.3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140" fill="none">
+  <defs>
+    <linearGradient id="srGold" x1="22%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#F8E7A8"/>
+      <stop offset="38%" stop-color="#D4AF37"/>
+      <stop offset="72%" stop-color="#C9A44C"/>
+      <stop offset="100%" stop-color="#8B6A28"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="50" cy="86" rx="38" ry="34" transform="rotate(-18 50 86)" stroke="url(#srGold)" stroke-width="1.35" opacity="0.9"/>
+  <ellipse cx="50" cy="86" rx="38" ry="34" transform="rotate(24 50 86)" stroke="url(#srGold)" stroke-width="1.35" opacity="0.9"/>
+  <path fill="url(#srGold)" d="M50 6c-5.2 9.4-8.2 13.8-8.2 18.4 0 4.6 3.7 8.3 8.2 8.3s8.2-3.7 8.2-8.3C58.2 19.8 55.2 15.4 50 6Z"/>
+  <path fill="url(#srGold)" d="M44 40c-7.5 10-11.2 22-9.8 36 1.1 10.5 6.8 8.8 10.2-1.5 3.2-12.2 4.8-23.8.4-34.5h-.8Z"/>
+  <path fill="url(#srGold)" d="M53 38c-9 16.5-12.8 35-9.2 56 1.6 9.2 7.5 6.5 10.4-4.8 3.6-18 5.4-36.5-1.2-51.2Z"/>
+  <path fill="url(#srGold)" d="M61 40c-7.8 26-11.5 50-8.2 74 1.2 8.2 5.8 5.2 8.6-6.5 6-26 8.2-48.5-.4-67.5Z"/>
 </svg>

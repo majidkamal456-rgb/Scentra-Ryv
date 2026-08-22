@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 
 from .models import Order
@@ -41,7 +43,14 @@ class CheckoutForm(forms.ModelForm):
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-input',
-                'placeholder': '03XX XXXXXXX',
+                'placeholder': '03XXXXXXXXX',
+                'inputmode': 'numeric',
+                'autocomplete': 'tel',
+                'maxlength': '11',
+                'pattern': r'03[0-9]{9}',
+                'x-model': 'phone',
+                '@input': 'limitPhone()',
+                '@blur': 'checkPhone()',
             }),
             'address': forms.Textarea(attrs={
                 'class': 'form-input',
@@ -51,6 +60,8 @@ class CheckoutForm(forms.ModelForm):
             'city': forms.TextInput(attrs={
                 'class': 'form-input',
                 'placeholder': 'City',
+                'x-model': 'city',
+                'autocomplete': 'address-level2',
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-input',
@@ -64,9 +75,11 @@ class CheckoutForm(forms.ModelForm):
         }
 
     def clean_phone(self):
-        phone = self.cleaned_data['phone']
+        phone = re.sub(r'\D', '', self.cleaned_data['phone'].strip())
+        if phone.startswith('92') and len(phone) == 12:
+            phone = '0' + phone[2:]
         validate_phone(phone)
-        return phone.strip()
+        return phone
 
     def clean(self):
         cleaned = super().clean()

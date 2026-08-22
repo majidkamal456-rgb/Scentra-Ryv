@@ -9,9 +9,13 @@ MAX_PAYMENT_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
 def validate_phone(value):
-    cleaned = re.sub(r'[\s\-\(\)]', '', value)
-    if not re.match(r'^(\+92|0)?3[0-9]{9}$', cleaned):
-        raise ValidationError('Enter a valid Pakistani mobile number (e.g. 03001234567).')
+    cleaned = re.sub(r'\D', '', value or '')
+    if cleaned.startswith('92') and len(cleaned) == 12:
+        cleaned = '0' + cleaned[2:]
+    if not re.match(r'^03[0-9]{9}$', cleaned):
+        raise ValidationError(
+            'Enter a valid 11-digit Pakistani mobile number (e.g. 03001234567).'
+        )
 
 
 def validate_payment_screenshot(file):

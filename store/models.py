@@ -18,7 +18,7 @@ class Product(models.Model):
     heart_notes = models.CharField(max_length=255)
     base_notes = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    size_ml = models.CharField(max_length=20, default='100ml')
+    size_ml = models.CharField(max_length=20, default='50ml')
     stock = models.PositiveIntegerField(default=50)
     image_main = models.ImageField(upload_to='products/', blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='unisex')

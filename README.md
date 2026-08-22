@@ -45,6 +45,25 @@ Production build:
 npm run build:css
 ```
 
+## Order email notifications (Gmail)
+
+Orders already trigger an email to `ORDER_NOTIFICATION_EMAIL` (default: `scentraryv@gmail.com`).
+If you do **not** get emails, your Gmail App Password is missing.
+
+1. Open [Google App Passwords](https://myaccount.google.com/apppasswords) (2-Step Verification must be ON)
+2. Create an app password for “Mail”
+3. Put it in `.env`:
+
+```env
+EMAIL_HOST_USER=scentraryv@gmail.com
+EMAIL_HOST_PASSWORD=xxxx xxxx xxxx xxxx
+ORDER_NOTIFICATION_EMAIL=scentraryv@gmail.com
+```
+
+4. Restart `python manage.py runserver`
+
+Without `EMAIL_HOST_PASSWORD`, Django only prints emails in the terminal (console backend) — they never reach Gmail.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and configure:
@@ -54,8 +73,8 @@ Copy `.env.example` to `.env` and configure:
 | `POSTGRES_*` | Database connection |
 | `BANK_NAME`, `BANK_ACCOUNT_TITLE`, `BANK_ACCOUNT_NUMBER`, `BANK_IBAN` | Bank transfer details shown at checkout |
 | `WHATSAPP_NUMBER` | WhatsApp contact (country code, no +) |
-| `SHIPPING_FLAT_RATE` | Flat shipping fee (default: 200) |
-| `FREE_SHIPPING_THRESHOLD` | Free shipping above this subtotal (default: 5000) |
+| `SHIPPING_NEARBY_RATE` | Punjab / default shipping (default: 280) |
+| `SHIPPING_OTHER_RATE` | Sindh, Balochistan & KPK shipping (default: 350) |
 
 ## Logo
 

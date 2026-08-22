@@ -9,7 +9,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="{% static 'images/logo-mark.png' %}">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
@@ -17,7 +18,8 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="relative flex min-h-screen flex-col">
+  <div class="site-noise" aria-hidden="true"></div>
   <div id="toast-container" class="fixed right-4 top-24 z-[100] space-y-3"></div>
 
   {% if messages %}
@@ -26,15 +28,14 @@
     {% endfor %}
   {% endif %}
 
-  <!-- Navbar -->
-  <header class="sticky top-0 z-50 border-b border-brand-gold/10 bg-brand-black/95 backdrop-blur-md">
-    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-      <a href="{% url 'store:home' %}" class="flex items-center gap-3">
-        <img src="{% static 'images/logo.svg' %}" alt="Scentra Ryv logo" class="h-10 w-10">
-        <div class="hidden sm:block">
-          <span class="font-serif text-xl tracking-[0.15em] text-brand-gold">Scentra Ryv</span>
-          <p class="text-[10px] uppercase tracking-[0.3em] text-brand-cream/50">Essence & Elixir</p>
-        </div>
+  <header class="site-header">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 lg:px-8">
+      <a href="{% url 'store:home' %}" class="brand-lockup" aria-label="Scentra Ryv home">
+        {% include 'store/partials/logo_mark.html' %}
+        <span class="min-w-0">
+          <span class="brand-lockup__name">Scentra Ryv</span>
+          <span class="brand-lockup__tagline"><span>Essence &amp; Elixir</span></span>
+        </span>
       </a>
 
       <div class="hidden items-center gap-10 md:flex">
@@ -44,77 +45,80 @@
         <a href="{% url 'store:contact' %}" class="nav-link">Contact</a>
       </div>
 
-      <div class="flex items-center gap-4">
-        <a href="{% url 'store:cart' %}" class="relative p-2 text-brand-cream/80 transition hover:text-brand-gold" aria-label="Shopping cart">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-          <span id="cart-badge" class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold text-[10px] font-semibold text-brand-black {% if not cart_count %}hidden{% endif %}">{{ cart_count }}</span>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'store:cart' %}" class="cart-trigger" aria-label="Shopping cart">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span id="cart-badge" class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-gold px-1 text-[10px] font-semibold text-brand-black {% if not cart_count %}hidden{% endif %}">{{ cart_count }}</span>
         </a>
-        <button id="mobile-menu-toggle" class="p-2 text-brand-cream md:hidden" aria-label="Open menu">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <button id="mobile-menu-toggle" class="cart-trigger md:hidden" aria-label="Open menu">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
     </nav>
   </header>
 
-  <!-- Mobile drawer -->
-  <div id="mobile-overlay" class="fixed inset-0 z-[60] hidden bg-black/60 backdrop-blur-sm md:hidden"></div>
-  <aside id="mobile-drawer" class="fixed right-0 top-0 z-[70] flex h-full w-72 translate-x-full flex-col border-l border-brand-gold/20 bg-brand-black p-8 transition-transform duration-300 md:hidden">
-    <button id="mobile-menu-close" class="mb-8 self-end text-brand-cream/60 hover:text-brand-gold" aria-label="Close menu">
+  <div id="mobile-overlay" class="fixed inset-0 z-[60] hidden bg-black/70 backdrop-blur-md md:hidden"></div>
+  <aside id="mobile-drawer" class="fixed right-0 top-0 z-[70] flex h-full w-[min(20rem,88vw)] translate-x-full flex-col border-l border-brand-gold/20 bg-brand-ink/95 p-8 shadow-lift backdrop-blur-xl transition-transform duration-500 ease-luxe md:hidden">
+    <button id="mobile-menu-close" class="mb-10 self-end text-brand-cream/50 transition hover:text-brand-gold" aria-label="Close menu">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
-    <a href="{% url 'store:home' %}" class="mb-6 font-serif text-2xl text-brand-gold">Home</a>
-    <a href="{% url 'store:shop' %}" class="mb-6 font-serif text-2xl text-brand-cream/80 hover:text-brand-gold">Shop</a>
-    <a href="{% url 'store:about' %}" class="mb-6 font-serif text-2xl text-brand-cream/80 hover:text-brand-gold">About</a>
-    <a href="{% url 'store:contact' %}" class="mb-6 font-serif text-2xl text-brand-cream/80 hover:text-brand-gold">Contact</a>
-    <a href="{% url 'store:cart' %}" class="mt-auto btn-gold w-full text-center">View Cart</a>
+    <nav class="flex flex-col gap-5">
+      <a href="{% url 'store:home' %}" class="font-serif text-3xl text-brand-gold transition hover:tracking-wide">Home</a>
+      <a href="{% url 'store:shop' %}" class="font-serif text-3xl text-brand-cream/85 transition hover:text-brand-gold hover:tracking-wide">Shop</a>
+      <a href="{% url 'store:about' %}" class="font-serif text-3xl text-brand-cream/85 transition hover:text-brand-gold hover:tracking-wide">About</a>
+      <a href="{% url 'store:contact' %}" class="font-serif text-3xl text-brand-cream/85 transition hover:text-brand-gold hover:tracking-wide">Contact</a>
+    </nav>
+    <a href="{% url 'store:cart' %}" class="btn-gold-filled mt-auto w-full text-center">View Cart</a>
   </aside>
 
-  <main class="flex-1">
+  <main class="relative z-10 flex-1">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer -->
-  <footer class="border-t border-brand-gold/10 bg-brand-charcoal">
-    <div class="mx-auto max-w-7xl px-4 py-16 lg:px-8">
-      <div class="grid gap-12 md:grid-cols-4">
-        <div class="md:col-span-1">
-          <img src="{% static 'images/logo.svg' %}" alt="Scentra Ryv" class="mb-4 h-12 w-12">
-          <h3 class="font-serif text-xl text-brand-gold">Scentra Ryv</h3>
-          <p class="mt-1 text-xs uppercase tracking-[0.25em] text-brand-cream/50">Essence & Elixir</p>
-          <p class="mt-4 text-sm text-brand-cream/60">Luxury fragrances crafted for those who appreciate the art of scent.</p>
+  <footer class="relative z-10 mt-auto border-t border-brand-gold/10 bg-brand-ink/80">
+    <div class="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-20">
+      <div class="grid gap-12 md:grid-cols-12">
+        <div class="md:col-span-5">
+          <a href="{% url 'store:home' %}" class="brand-lockup brand-lockup--footer" aria-label="Scentra Ryv home">
+            {% include 'store/partials/logo_mark.html' %}
+            <span>
+              <span class="brand-lockup__name">Scentra Ryv</span>
+              <span class="brand-lockup__tagline"><span>Essence &amp; Elixir</span></span>
+            </span>
+          </a>
+          <p class="mt-5 max-w-sm text-sm leading-relaxed text-brand-mute">Luxury fragrances crafted for those who appreciate the art of scent — rare notes, refined presence.</p>
         </div>
-        <div>
-          <h4 class="mb-4 text-xs uppercase tracking-[0.2em] text-brand-gold">Quick Links</h4>
-          <ul class="space-y-2 text-sm text-brand-cream/70">
-            <li><a href="{% url 'store:home' %}" class="hover:text-brand-gold">Home</a></li>
-            <li><a href="{% url 'store:shop' %}" class="hover:text-brand-gold">Shop</a></li>
-            <li><a href="{% url 'store:about' %}" class="hover:text-brand-gold">About</a></li>
-            <li><a href="{% url 'store:contact' %}" class="hover:text-brand-gold">Contact</a></li>
+        <div class="md:col-span-2">
+          <h4 class="mb-5 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Explore</h4>
+          <ul class="space-y-3 text-sm text-brand-cream/65">
+            <li><a href="{% url 'store:home' %}" class="transition hover:text-brand-gold">Home</a></li>
+            <li><a href="{% url 'store:shop' %}" class="transition hover:text-brand-gold">Shop</a></li>
+            <li><a href="{% url 'store:about' %}" class="transition hover:text-brand-gold">About</a></li>
+            <li><a href="{% url 'store:contact' %}" class="transition hover:text-brand-gold">Contact</a></li>
           </ul>
         </div>
-        <div>
-          <h4 class="mb-4 text-xs uppercase tracking-[0.2em] text-brand-gold">Contact</h4>
-          <ul class="space-y-2 text-sm text-brand-cream/70">
-            <li>WhatsApp: +{{ whatsapp_number|default:"923001234567" }}</li>
-            <li>Email: hello@scentryryv.com</li>
+        <div class="md:col-span-3">
+          <h4 class="mb-5 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Contact</h4>
+          <ul class="space-y-3 text-sm text-brand-cream/65">
+            <li><a href="https://wa.me/{{ whatsapp_number }}" target="_blank" rel="noopener" class="transition hover:text-brand-gold">WhatsApp · +92 317 7478167</a></li>
+            <li><a href="mailto:{{ contact_email }}" class="transition hover:text-brand-gold">{{ contact_email }}</a></li>
             <li>Nationwide Delivery</li>
           </ul>
         </div>
-        <div>
-          <h4 class="mb-4 text-xs uppercase tracking-[0.2em] text-brand-gold">Payment</h4>
-          <p class="text-sm text-brand-cream/70">Cash on Delivery Available Nationwide</p>
-          <p class="mt-2 text-sm text-brand-cream/50">Bank transfer also accepted</p>
+        <div class="md:col-span-2">
+          <h4 class="mb-5 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Payment</h4>
+          <p class="text-sm leading-relaxed text-brand-cream/65">Cash on Delivery</p>
+          <p class="mt-2 text-sm text-brand-mute">Bank transfer accepted</p>
         </div>
       </div>
-      <div class="gold-divider mt-12"></div>
-      <p class="text-center text-xs text-brand-cream/40">&copy; {% now "Y" %} Scentra Ryv. All rights reserved.</p>
+      <div class="gold-divider mt-14"></div>
+      <p class="text-center text-[11px] tracking-wider text-brand-mute/70">&copy; {% now "Y" %} Scentra Ryv. All rights reserved.</p>
     </div>
   </footer>
 
-  <!-- Quick view modal -->
-  <div id="quick-view-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-    <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-brand-gold/20 bg-brand-charcoal p-8">
-      <button id="quick-view-close" class="absolute right-4 top-4 text-brand-cream/60 hover:text-brand-gold">&times;</button>
+  <div id="quick-view-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/75 p-4 backdrop-blur-md">
+    <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-brand-gold/20 bg-brand-charcoal/95 p-6 shadow-lift sm:p-8">
+      <button id="quick-view-close" class="absolute right-4 top-3 text-2xl text-brand-cream/50 transition hover:text-brand-gold" aria-label="Close">&times;</button>
       <div id="quick-view-content"></div>
     </div>
   </div>

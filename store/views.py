@@ -1,13 +1,16 @@
+from django.conf import settings
 from django.contrib import messages
-from django.db.models import Q
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .cart import Cart
+from .emails import send_order_notification
 from .forms import CheckoutForm
 from .models import Order, OrderItem, Product
+from .shipping import REMOTE_CITIES, REMOTE_CITY_LABELS, NEARBY_CITY_LABELS
 
 
 def home(request):
@@ -58,7 +61,17 @@ def contact(request):
 
 def cart_view(request):
     cart = Cart(request)
-    return render(request, 'store/cart.html', {'cart': cart})
+    nearby_shipping, other_shipping = cart.get_shipping_range()
+    subtotal = cart.get_subtotal()
+    return render(request, 'store/cart.html', {
+        'cart': cart,
+        'nearby_shipping': nearby_shipping,
+        'other_shipping': other_shipping,
+        'nearby_city_labels': NEARBY_CITY_LABELS,
+        'remote_city_labels': REMOTE_CITY_LABELS,
+        'total_from': subtotal + nearby_shipping,
+        'total_to': subtotal + other_shipping,
+    })
 
 
 @require_POST
@@ -110,6 +123,24 @@ def cart_remove(request):
     return redirect('store:cart')
 
 
+CHECKOUT_DRAFT_KEY = 'checkout_draft'
+CHECKOUT_DRAFT_FIELDS = (
+    'full_name', 'phone', 'address', 'city', 'email', 'notes', 'payment_method',
+)
+
+
+def _save_checkout_draft(request):
+    draft = {field: request.POST.get(field, '').strip() for field in CHECKOUT_DRAFT_FIELDS}
+    request.session[CHECKOUT_DRAFT_KEY] = draft
+    request.session.modified = True
+
+
+def _clear_checkout_draft(request):
+    if CHECKOUT_DRAFT_KEY in request.session:
+        del request.session[CHECKOUT_DRAFT_KEY]
+        request.session.modified = True
+
+
 def checkout(request):
     cart = Cart(request)
     if cart.is_empty():
@@ -118,9 +149,13 @@ def checkout(request):
 
     if request.method == 'POST':
         form = CheckoutForm(request.POST, request.FILES)
+        # Keep whatever the customer typed so far (even if validation fails)
+        _save_checkout_draft(request)
+
         if form.is_valid():
             order = form.save(commit=False)
             payment_method = form.cleaned_data['payment_method']
+            city = form.cleaned_data['city']
 
             if payment_method == Order.PAYMENT_COD:
                 order.status = Order.STATUS_PENDING_COD
@@ -128,32 +163,51 @@ def checkout(request):
                 order.status = Order.STATUS_PENDING_VERIFICATION
 
             order.subtotal = cart.get_subtotal()
-            order.shipping = cart.get_shipping()
-            order.total_amount = cart.get_total()
-            order.save()
+            order.shipping = cart.get_shipping(city)
+            order.total_amount = cart.get_total(city)
 
-            for item in cart:
-                OrderItem.objects.create(
-                    order=order,
-                    product=item['product'],
-                    product_name=item['product'].name,
-                    size_ml=item['size'],
-                    quantity=item['quantity'],
-                    price_at_purchase=item['price'],
-                )
-                product = item['product']
-                product.stock = max(0, product.stock - item['quantity'])
-                product.save(update_fields=['stock'])
+            with transaction.atomic():
+                order.save()
 
+                for item in cart:
+                    OrderItem.objects.create(
+                        order=order,
+                        product=item['product'],
+                        product_name=item['product'].name,
+                        size_ml=item['size'],
+                        quantity=item['quantity'],
+                        price_at_purchase=item['price'],
+                    )
+                    product = item['product']
+                    product.stock = max(0, product.stock - item['quantity'])
+                    product.save(update_fields=['stock'])
+
+            send_order_notification(order)
             cart.clear()
+            _clear_checkout_draft(request)
             messages.success(request, 'Your order has been placed successfully!')
             return redirect('store:order_confirmation', order_number=order.order_number)
     else:
-        form = CheckoutForm()
+        draft = request.session.get(CHECKOUT_DRAFT_KEY) or {}
+        form = CheckoutForm(initial=draft)
 
+    nearby_shipping, other_shipping = cart.get_shipping_range()
     return render(request, 'store/checkout.html', {
         'form': form,
         'cart': cart,
+        'nearby_city_labels': NEARBY_CITY_LABELS,
+        'remote_city_labels': REMOTE_CITY_LABELS,
+        'nearby_shipping': nearby_shipping,
+        'other_shipping': other_shipping,
+        'checkout_draft': request.session.get(CHECKOUT_DRAFT_KEY) or {},
+        'prefer_local_draft': request.method != 'POST',
+        'shipping_config': {
+            'remoteCities': sorted(REMOTE_CITIES),
+            'punjabRate': float(settings.SHIPPING_NEARBY_RATE),
+            'remoteRate': float(settings.SHIPPING_OTHER_RATE),
+            'itemCount': len(cart),
+            'subtotal': float(cart.get_subtotal()),
+        },
     })
 
 

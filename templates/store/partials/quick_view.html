@@ -1,6 +1,6 @@
 {% load static %}
 <div class="grid gap-8 md:grid-cols-2">
-  <div>
+  <div class="overflow-hidden border border-brand-gold/10 bg-brand-ink">
     {% if product.image_main %}
       <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square w-full object-cover">
     {% else %}
@@ -9,18 +9,19 @@
       </div>
     {% endif %}
   </div>
-  <div>
-    <h2 class="font-serif text-3xl text-brand-gold">{{ product.name }}</h2>
-    <p class="mt-2 text-brand-cream/60">{{ product.short_description }}</p>
-    <p class="mt-4 font-serif text-2xl text-brand-gold">Rs. {{ product.price|floatformat:0 }}</p>
-    <p class="mt-1 text-sm text-brand-cream/50">{{ product.size_ml }}</p>
-    <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-6">
+  <div class="flex flex-col justify-center">
+    <p class="section-eyebrow">{{ product.gender }}</p>
+    <h2 class="mt-2 font-serif text-3xl text-brand-cream">{{ product.name }}</h2>
+    <p class="mt-3 text-sm leading-relaxed text-brand-mute">{{ product.short_description }}</p>
+    <p class="mt-5 font-serif text-2xl text-gradient-gold">Rs. {{ product.price|floatformat:0 }}</p>
+    <p class="mt-1 text-sm text-brand-mute">{{ product.size_ml }}</p>
+    <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-8">
       {% csrf_token %}
       <input type="hidden" name="product_id" value="{{ product.id }}">
       <input type="hidden" name="quantity" value="1">
       <input type="hidden" name="size" value="{{ product.size_ml }}">
       <button type="submit" class="btn-gold-filled w-full">Add to Cart</button>
     </form>
-    <a href="{{ product.get_absolute_url }}" class="mt-4 block text-center text-sm text-brand-gold underline">View full details</a>
+    <a href="{{ product.get_absolute_url }}" class="btn-ghost mt-4 block text-center">View full details</a>
   </div>
 </div>

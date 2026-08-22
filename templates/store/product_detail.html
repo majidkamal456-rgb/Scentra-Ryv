@@ -4,16 +4,15 @@
 {% block meta_description %}{{ product.short_description }}{% endblock %}
 
 {% block content %}
-<section class="mx-auto max-w-7xl px-4 py-16 lg:px-8">
-  <div class="grid gap-12 lg:grid-cols-2">
-    <!-- Gallery -->
-    <div class="product-gallery">
+<section class="page-shell">
+  <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+    <div class="product-gallery fade-section visible">
       {% if product.images.exists or product.image_main %}
         <div class="swiper product-detail-swiper">
           <div class="swiper-wrapper">
             {% if product.image_main %}
               <div class="swiper-slide">
-                <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square w-full object-cover">
+                <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square h-full w-full object-cover object-center">
               </div>
             {% endif %}
             {% for img in product.images.all %}
@@ -27,7 +26,7 @@
           <div class="swiper-pagination"></div>
         </div>
       {% else %}
-        <div class="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-charcoal via-brand-black to-brand-charcoal">
+        <div class="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-charcoal via-brand-black to-brand-ink">
           <div class="text-center">
             <div class="mx-auto mb-6 h-48 w-28 rounded-t-full border border-brand-gold/40 bg-gradient-to-b from-brand-gold/30 to-transparent"></div>
             <span class="font-serif text-2xl text-brand-gold/60">{{ product.name }}</span>
@@ -36,31 +35,38 @@
       {% endif %}
     </div>
 
-    <!-- Details -->
-    <div class="fade-section visible">
-      <p class="text-xs uppercase tracking-[0.3em] text-brand-gold">{{ product.gender }}</p>
-      <h1 class="mt-2 font-serif text-4xl md:text-5xl text-brand-cream">{{ product.name }}</h1>
-      <p class="mt-4 text-brand-cream/70">{{ product.short_description }}</p>
-      <p class="mt-6 font-serif text-3xl text-brand-gold">Rs. {{ product.price|floatformat:0 }}</p>
+    <div class="fade-section visible lg:py-4">
+      <p class="section-eyebrow">{{ product.gender }}</p>
+      <h1 class="mt-3 font-serif text-4xl text-brand-cream md:text-5xl">{{ product.name }}</h1>
+      <p class="mt-4 text-base leading-relaxed text-brand-mute">{{ product.short_description }}</p>
+      <p class="mt-6 font-serif text-3xl text-gradient-gold">Rs. {{ product.price|floatformat:0 }}</p>
 
-      <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-8 space-y-6" x-data="{ size: '{{ product.size_ml }}', qty: 1 }">
+      <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-10 space-y-7" x-data="{ size: '{{ product.size_ml }}', qty: 1 }">
         {% csrf_token %}
         <input type="hidden" name="product_id" value="{{ product.id }}">
 
         <div>
-          <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Size</label>
+          <label class="form-label">Size</label>
           <div class="flex gap-3">
-            <button type="button" @click="size='{{ product.size_ml }}'" :class="size==='{{ product.size_ml }}' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-brand-gold/30 text-brand-cream/60'" class="border px-6 py-2 text-sm transition">{{ product.size_ml }}</button>
+            <button type="button" @click="size='{{ product.size_ml }}'" :class="size==='{{ product.size_ml }}' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-brand-gold/30 text-brand-cream/60'" class="border px-6 py-2.5 text-sm transition duration-300">{{ product.size_ml }}</button>
           </div>
           <input type="hidden" name="size" :value="size">
         </div>
 
         <div>
-          <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Quantity</label>
-          <div class="flex items-center gap-4">
-            <button type="button" @click="qty = Math.max(1, qty - 1)" class="flex h-10 w-10 items-center justify-center border border-brand-gold/30 text-brand-gold hover:border-brand-gold">−</button>
-            <span class="w-8 text-center font-serif text-xl" x-text="qty"></span>
-            <button type="button" @click="qty = Math.min({{ product.stock }}, qty + 1)" class="flex h-10 w-10 items-center justify-center border border-brand-gold/30 text-brand-gold hover:border-brand-gold">+</button>
+          <label class="form-label">Quantity</label>
+          <div class="qty-stepper">
+            <button type="button" class="qty-stepper__btn" :disabled="qty <= 1" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3.5 8h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <span class="qty-stepper__value" x-text="qty" aria-live="polite"></span>
+            <button type="button" class="qty-stepper__btn" :disabled="qty >= {{ product.stock }}" @click="qty = Math.min({{ product.stock }}, qty + 1)" aria-label="Increase quantity">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
           </div>
           <input type="hidden" name="quantity" :value="qty">
         </div>
@@ -68,38 +74,38 @@
         {% if product.in_stock %}
           <button type="submit" class="btn-gold-filled w-full">Add to Cart</button>
         {% else %}
-          <button type="button" disabled class="w-full cursor-not-allowed border border-brand-cream/20 py-3 text-sm uppercase tracking-widest text-brand-cream/30">Out of Stock</button>
+          <button type="button" disabled class="w-full cursor-not-allowed border border-brand-cream/20 py-3.5 text-xs uppercase tracking-[0.22em] text-brand-cream/30">Out of Stock</button>
         {% endif %}
       </form>
 
-      <div class="mt-10 space-y-4 border-t border-brand-gold/10 pt-10">
+      <div class="mt-12 space-y-5 border-t border-brand-gold/10 pt-10">
         <h3 class="font-serif text-xl text-brand-gold">Scent Notes</h3>
-        <div class="grid gap-4 sm:grid-cols-3">
-          <div class="border border-brand-gold/10 p-4">
-            <p class="text-xs uppercase tracking-widest text-brand-gold">Top</p>
-            <p class="mt-2 text-sm text-brand-cream/70">{{ product.top_notes }}</p>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div class="surface p-4">
+            <p class="text-[10px] uppercase tracking-[0.22em] text-brand-gold">Top</p>
+            <p class="mt-2 text-sm leading-relaxed text-brand-cream/70">{{ product.top_notes }}</p>
           </div>
-          <div class="border border-brand-gold/10 p-4">
-            <p class="text-xs uppercase tracking-widest text-brand-gold">Heart</p>
-            <p class="mt-2 text-sm text-brand-cream/70">{{ product.heart_notes }}</p>
+          <div class="surface p-4">
+            <p class="text-[10px] uppercase tracking-[0.22em] text-brand-gold">Heart</p>
+            <p class="mt-2 text-sm leading-relaxed text-brand-cream/70">{{ product.heart_notes }}</p>
           </div>
-          <div class="border border-brand-gold/10 p-4">
-            <p class="text-xs uppercase tracking-widest text-brand-gold">Base</p>
-            <p class="mt-2 text-sm text-brand-cream/70">{{ product.base_notes }}</p>
+          <div class="surface p-4">
+            <p class="text-[10px] uppercase tracking-[0.22em] text-brand-gold">Base</p>
+            <p class="mt-2 text-sm leading-relaxed text-brand-cream/70">{{ product.base_notes }}</p>
           </div>
         </div>
       </div>
 
-      <div class="mt-8 text-sm leading-relaxed text-brand-cream/60">
+      <div class="mt-8 text-sm leading-relaxed text-brand-mute">
         {{ product.description|linebreaks }}
       </div>
     </div>
   </div>
 
-  <!-- Related -->
   {% if related_products %}
-  <section class="fade-section mt-24 border-t border-brand-gold/10 pt-24">
-    <h2 class="section-heading text-center">You May Also Like</h2>
+  <section class="fade-section mt-20 border-t border-brand-gold/10 pt-16 lg:mt-28 lg:pt-20">
+    <p class="section-eyebrow text-center">More to Love</p>
+    <h2 class="section-heading mt-3 text-center">You May Also Like</h2>
     <div class="gold-divider"></div>
     <div class="related-swiper swiper mt-12">
       <div class="swiper-wrapper">
@@ -122,6 +128,7 @@
   {% if product.images.exists or product.image_main %}
   new Swiper('.product-detail-swiper', {
     loop: true,
+    speed: 700,
     pagination: { el: '.product-detail-swiper .swiper-pagination', clickable: true },
     navigation: {
       nextEl: '.product-detail-swiper .swiper-button-next',
@@ -132,6 +139,7 @@
   new Swiper('.related-swiper', {
     slidesPerView: 1,
     spaceBetween: 24,
+    speed: 600,
     navigation: {
       nextEl: '.related-swiper .swiper-button-next',
       prevEl: '.related-swiper .swiper-button-prev',
