@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+  <div class="mb-12 text-center fade-section visible">
+    <h1 class="section-heading">Shop All Fragrances</h1>
+    <div class="gold-divider"></div>
+    <p class="text-brand-cream/60">Discover your signature scent from our luxury collection</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="fade-section visible mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-brand-gold/10 pb-6">
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'store:shop' %}" class="px-4 py-2 text-xs uppercase tracking-widest {% if not current_gender %}bg-brand-gold text-brand-black{% else %}border border-brand-gold/30 text-brand-cream/70 hover:border-brand-gold{% endif %}">All</a>
+      <a href="?gender=unisex{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-4 py-2 text-xs uppercase tracking-widest {% if current_gender == 'unisex' %}bg-brand-gold text-brand-black{% else %}border border-brand-gold/30 text-brand-cream/70 hover:border-brand-gold{% endif %}">Unisex</a>
+      <a href="?gender=men{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-4 py-2 text-xs uppercase tracking-widest {% if current_gender == 'men' %}bg-brand-gold text-brand-black{% else %}border border-brand-gold/30 text-brand-cream/70 hover:border-brand-gold{% endif %}">Men</a>
+      <a href="?gender=women{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-4 py-2 text-xs uppercase tracking-widest {% if current_gender == 'women' %}bg-brand-gold text-brand-black{% else %}border border-brand-gold/30 text-brand-cream/70 hover:border-brand-gold{% endif %}">Women</a>
+    </div>
+    <form method="get" class="flex items-center gap-2">
+      {% if current_gender %}<input type="hidden" name="gender" value="{{ current_gender }}">{% endif %}
+      <label for="sort" class="text-xs uppercase tracking-widest text-brand-cream/50">Sort</label>
+      <select name="sort" id="sort" onchange="this.form.submit()" class="form-input w-auto py-2 text-sm">
+        <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name</option>
+        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+        <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+      </select>
+    </form>
+  </div>
+
+  <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    {% for product in products %}
+      {% include 'store/partials/product_card.html' %}
+    {% empty %}
+      <p class="col-span-full py-20 text-center text-brand-cream/50">No products found.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl px-4 py-16 lg:px-8" x-data="checkoutForm()">
+  <h1 class="section-heading text-center">Checkout</h1>
+  <div class="gold-divider"></div>
+
+  <form method="post" enctype="multipart/form-data" class="mt-12 grid gap-12 lg:grid-cols-3" @submit="validateForm">
+    {% csrf_token %}
+    <div class="lg:col-span-2 space-y-8">
+      <!-- Customer details -->
+      <div class="border border-brand-gold/10 bg-brand-charcoal p-8">
+        <h2 class="font-serif text-2xl text-brand-gold">Delivery Details</h2>
+        <div class="mt-6 grid gap-6 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Full Name *</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}<p class="mt-1 text-sm text-red-300">{{ form.full_name.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Phone Number *</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<p class="mt-1 text-sm text-red-300">{{ form.phone.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">City *</label>
+            {{ form.city }}
+            {% if form.city.errors %}<p class="mt-1 text-sm text-red-300">{{ form.city.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Full Address *</label>
+            {{ form.address }}
+            {% if form.address.errors %}<p class="mt-1 text-sm text-red-300">{{ form.address.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Email (optional)</label>
+            {{ form.email }}
+          </div>
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Order Notes (optional)</label>
+            {{ form.notes }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment method -->
+      <div class="border border-brand-gold/10 bg-brand-charcoal p-8">
+        <h2 class="font-serif text-2xl text-brand-gold">Payment Method</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+          <!-- COD -->
+          <label class="relative cursor-pointer border p-6 transition"
+                 :class="paymentMethod === 'cod' ? 'border-brand-gold bg-brand-gold/5 shadow-gold' : 'border-brand-gold/20 hover:border-brand-gold/40'">
+            <input type="radio" name="payment_method" value="cod" class="sr-only" x-model="paymentMethod">
+            <span class="absolute right-4 top-4 bg-brand-gold px-2 py-0.5 text-[10px] uppercase tracking-widest text-brand-black">Recommended</span>
+            <h3 class="font-serif text-xl text-brand-cream">Cash on Delivery</h3>
+            <p class="mt-2 text-sm text-brand-cream/50">Pay in cash when your order arrives at your doorstep.</p>
+          </label>
+
+          <!-- Bank Transfer -->
+          <label class="cursor-pointer border p-6 transition"
+                 :class="paymentMethod === 'bank_transfer' ? 'border-brand-gold bg-brand-gold/5 shadow-gold' : 'border-brand-gold/20 hover:border-brand-gold/40'">
+            <input type="radio" name="payment_method" value="bank_transfer" class="sr-only" x-model="paymentMethod">
+            <h3 class="font-serif text-xl text-brand-cream">Online Bank Transfer</h3>
+            <p class="mt-2 text-sm text-brand-cream/50">Transfer to our bank account and upload payment proof.</p>
+          </label>
+        </div>
+
+        <!-- Bank details (shown when bank transfer selected) -->
+        <div x-show="paymentMethod === 'bank_transfer'" x-transition class="mt-8 border border-brand-gold/20 bg-brand-black p-6">
+          <h3 class="font-serif text-lg text-brand-gold">Bank Account Details</h3>
+          <dl class="mt-4 space-y-3 text-sm">
+            <div class="flex justify-between border-b border-brand-gold/10 pb-2">
+              <dt class="text-brand-cream/50">Bank Name</dt>
+              <dd class="text-brand-cream">{{ bank_details.bank_name }}</dd>
+            </div>
+            <div class="flex justify-between border-b border-brand-gold/10 pb-2">
+              <dt class="text-brand-cream/50">Account Title</dt>
+              <dd class="text-brand-cream">{{ bank_details.account_title }}</dd>
+            </div>
+            <div class="flex items-center justify-between border-b border-brand-gold/10 pb-2">
+              <dt class="text-brand-cream/50">Account Number</dt>
+              <dd class="flex items-center gap-2 text-brand-cream">
+                {{ bank_details.account_number }}
+                <button type="button" @click="copyToClipboard('{{ bank_details.account_number }}', $el)" class="text-xs text-brand-gold underline">Copy</button>
+              </dd>
+            </div>
+            <div class="flex justify-between border-b border-brand-gold/10 pb-2">
+              <dt class="text-brand-cream/50">IBAN</dt>
+              <dd class="text-brand-cream">{{ bank_details.iban }}</dd>
+            </div>
+            {% if bank_details.branch_code %}
+            <div class="flex justify-between pb-2">
+              <dt class="text-brand-cream/50">Branch Code</dt>
+              <dd class="text-brand-cream">{{ bank_details.branch_code }}</dd>
+            </div>
+            {% endif %}
+          </dl>
+          <p class="mt-6 text-sm text-brand-cream/60">
+            Please transfer the exact order total to the account above, then upload a screenshot of your payment confirmation below.
+            Your order will be processed once we verify the payment.
+          </p>
+
+          <!-- File upload -->
+          <div class="mt-6">
+            <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Upload Payment Screenshot *</label>
+            <div class="relative border-2 border-dashed border-brand-gold/30 p-8 text-center transition hover:border-brand-gold/60"
+                 @dragover.prevent="dragOver = true"
+                 @dragleave.prevent="dragOver = false"
+                 @drop.prevent="handleDrop($event)"
+                 :class="dragOver ? 'border-brand-gold bg-brand-gold/5' : ''">
+              <input type="file" name="payment_screenshot" id="payment-screenshot" accept="image/jpeg,image/png,application/pdf"
+                     class="absolute inset-0 cursor-pointer opacity-0" @change="handleFileSelect($event)" x-ref="fileInput">
+              <template x-if="!previewUrl">
+                <div>
+                  <svg class="mx-auto h-10 w-10 text-brand-gold/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                  <p class="mt-2 text-sm text-brand-cream/50">Drag & drop or click to upload</p>
+                  <p class="text-xs text-brand-cream/30">JPG, PNG, or PDF — max 5MB</p>
+                </div>
+              </template>
+              <template x-if="previewUrl">
+                <div>
+                  <img :src="previewUrl" alt="Payment preview" class="mx-auto max-h-40 object-contain">
+                  <p class="mt-2 text-sm text-brand-gold" x-text="fileName"></p>
+                </div>
+              </template>
+            </div>
+            {% if form.payment_screenshot.errors %}
+              <p class="mt-2 text-sm text-red-300">{{ form.payment_screenshot.errors.0 }}</p>
+            {% endif %}
+            <p x-show="paymentMethod === 'bank_transfer' && !hasFile && submitted" class="mt-2 text-sm text-red-300">Payment screenshot is required.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order summary sidebar -->
+    <div class="border border-brand-gold/20 bg-brand-charcoal p-8 h-fit sticky top-24">
+      <h2 class="font-serif text-2xl text-brand-gold">Order Summary</h2>
+      <ul class="mt-6 space-y-3 text-sm text-brand-cream/70">
+        {% for item in cart %}
+        <li class="flex justify-between">
+          <span>{{ item.product.name }} × {{ item.quantity }}</span>
+          <span>Rs. {{ item.line_total|floatformat:0 }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="mt-6 space-y-2 text-sm">
+        <div class="flex justify-between text-brand-cream/70">
+          <span>Subtotal</span>
+          <span>Rs. {{ cart.get_subtotal|floatformat:0 }}</span>
+        </div>
+        <div class="flex justify-between text-brand-cream/70">
+          <span>Shipping</span>
+          <span>{% if cart.get_shipping %}Rs. {{ cart.get_shipping|floatformat:0 }}{% else %}Free{% endif %}</span>
+        </div>
+        <div class="gold-divider !my-4"></div>
+        <div class="flex justify-between font-serif text-xl text-brand-gold">
+          <span>Total</span>
+          <span>Rs. {{ cart.get_total|floatformat:0 }}</span>
+        </div>
+      </div>
+      <button type="submit" class="btn-gold-filled mt-8 w-full" :disabled="submitting">
+        <span x-show="!submitting">Place Order</span>
+        <span x-show="submitting">Processing...</span>
+      </button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkoutForm() {
+  return {
+    paymentMethod: '{{ form.payment_method.value|default:"cod" }}',
+    previewUrl: null,
+    fileName: '',
+    hasFile: false,
+    dragOver: false,
+    submitting: false,
+    submitted: false,
+
+    handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) this.setPreview(file);
+    },
+
+    handleDrop(e) {
+      this.dragOver = false;
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        this.$refs.fileInput.files = e.dataTransfer.files;
+        this.setPreview(file);
+      }
+    },
+
+    setPreview(file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File must be under 5MB.');
+        return;
+      }
+      this.fileName = file.name;
+      this.hasFile = true;
+      if (file.type.startsWith('image/')) {
+        this.previewUrl = URL.createObjectURL(file);
+      } else {
+        this.previewUrl = null;
+      }
+    },
+
+    validateForm(e) {
+      this.submitted = true;
+      if (this.paymentMethod === 'bank_transfer' && !this.hasFile) {
+        e.preventDefault();
+        return false;
+      }
+      this.submitting = true;
+    },
+
+    copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+      });
+    },
+  };
+}
+</script>
+{% endblock %}

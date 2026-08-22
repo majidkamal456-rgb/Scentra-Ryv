@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-4 py-20 text-center lg:px-8">
+  <div class="fade-section visible">
+    <div class="mx-auto mb-8 flex h-20 w-20 items-center justify-center border border-brand-gold text-brand-gold">
+      <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h1 class="font-serif text-4xl text-brand-gold">Thank You</h1>
+    <p class="mt-2 text-brand-cream/50">Order <span class="text-brand-gold">{{ order.order_number }}</span></p>
+
+    {% if order.payment_method == 'cod' %}
+      <p class="mx-auto mt-8 max-w-lg text-lg text-brand-cream/80">
+        Your order has been placed! Pay cash on delivery when it arrives.
+      </p>
+    {% else %}
+      <p class="mx-auto mt-8 max-w-lg text-lg text-brand-cream/80">
+        Thank you! We've received your order and payment screenshot. Our team will verify your payment and confirm your order shortly via phone/WhatsApp.
+      </p>
+    {% endif %}
+
+    <div class="mx-auto mt-12 max-w-md border border-brand-gold/20 bg-brand-charcoal p-8 text-left">
+      <h2 class="font-serif text-xl text-brand-gold">Order Summary</h2>
+      <ul class="mt-4 space-y-2 text-sm text-brand-cream/70">
+        {% for item in order.items.all %}
+        <li class="flex justify-between">
+          <span>{{ item.product_name }} ({{ item.size_ml }}) × {{ item.quantity }}</span>
+          <span>Rs. {{ item.line_total|floatformat:0 }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="gold-divider !my-4"></div>
+      <div class="flex justify-between text-sm text-brand-cream/70">
+        <span>Payment</span>
+        <span>{{ order.get_payment_method_display }}</span>
+      </div>
+      <div class="mt-2 flex justify-between font-serif text-xl text-brand-gold">
+        <span>Total</span>
+        <span>Rs. {{ order.total_amount|floatformat:0 }}</span>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-wrap justify-center gap-4">
+      <a href="https://wa.me/{{ whatsapp_number }}?text=Hi,%20I%20placed%20order%20{{ order.order_number }}" target="_blank" rel="noopener" class="btn-gold-filled">
+        Message us on WhatsApp
+      </a>
+      <a href="{% url 'store:shop' %}" class="btn-gold">Continue Shopping</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

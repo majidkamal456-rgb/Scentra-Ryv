@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Scentra Ryv{% endblock %} | Essence & Elixir</title>
+  <meta name="description" content="{% block meta_description %}Luxury perfumes by Scentra Ryv — Essence & Elixir. Premium fragrances with cash on delivery nationwide.{% endblock %}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_css %}{% endblock %}
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+</head>
+<body class="min-h-screen flex flex-col">
+  <div id="toast-container" class="fixed right-4 top-24 z-[100] space-y-3"></div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <span data-toast="{{ message }}" data-toast-type="{% if message.tags == 'error' %}error{% else %}success{% endif %}" class="hidden"></span>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-50 border-b border-brand-gold/10 bg-brand-black/95 backdrop-blur-md">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
+      <a href="{% url 'store:home' %}" class="flex items-center gap-3">
+        <img src="{% static 'images/logo.svg' %}" alt="Scentra Ryv logo" class="h-10 w-10">
+        <div class="hidden sm:block">
+          <span class="font-serif text-xl tracking-[0.15em] text-brand-gold">Scentra Ryv</span>
+          <p class="text-[10px] uppercase tracking-[0.3em] text-brand-cream/50">Essence & Elixir</p>
+        </div>
+      </a>
+
+      <div class="hidden items-center gap-10 md:flex">
+        <a href="{% url 'store:home' %}" class="nav-link">Home</a>
+        <a href="{% url 'store:shop' %}" class="nav-link">Shop</a>
+        <a href="{% url 'store:about' %}" class="nav-link">About</a>
+        <a href="{% url 'store:contact' %}" class="nav-link">Contact</a>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <a href="{% url 'store:cart' %}" class="relative p-2 text-brand-cream/80 transition hover:text-brand-gold" aria-label="Shopping cart">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span id="cart-badge" class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold text-[10px] font-semibold text-brand-black {% if not cart_count %}hidden{% endif %}">{{ cart_count }}</span>
+        </a>
+        <button id="mobile-menu-toggle" class="p-2 text-brand-cream md:hidden" aria-label="Open menu">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Mobile drawer -->
+  <div id="mobile-overlay" class="fixed inset-0 z-[60] hidden bg-black/60 backdrop-blur-sm md:hidden"></div>
+  <aside id="mobile-drawer" class="fixed right-0 top-0 z-[70] flex h-full w-72 translate-x-full flex-col border-l border-brand-gold/20 bg-brand-black p-8 transition-transform duration-300 md:hidden">
+    <button id="mobile-menu-close" class="mb-8 self-end text-brand-cream/60 hover:text-brand-gold" aria-label="Close menu">
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <a href="{% url 'store:home' %}" class="mb-6 font-serif text-2xl text-brand-gold">Home</a>
+    <a href="{% url 'store:shop' %}" class="mb-6 font-serif text-2xl text-brand-cream/80 hover:text-brand-gold">Shop</a>
+    <a href="{% url 'store:about' %}" class="mb-6 font-serif text-2xl text-brand-cream/80 hover:text-brand-gold">About</a>
+    <a href="{% url 'store:contact' %}" class="mb-6 font-serif text-2xl text-brand-cream/80 hover:text-brand-gold">Contact</a>
+    <a href="{% url 'store:cart' %}" class="mt-auto btn-gold w-full text-center">View Cart</a>
+  </aside>
+
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-brand-gold/10 bg-brand-charcoal">
+    <div class="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+      <div class="grid gap-12 md:grid-cols-4">
+        <div class="md:col-span-1">
+          <img src="{% static 'images/logo.svg' %}" alt="Scentra Ryv" class="mb-4 h-12 w-12">
+          <h3 class="font-serif text-xl text-brand-gold">Scentra Ryv</h3>
+          <p class="mt-1 text-xs uppercase tracking-[0.25em] text-brand-cream/50">Essence & Elixir</p>
+          <p class="mt-4 text-sm text-brand-cream/60">Luxury fragrances crafted for those who appreciate the art of scent.</p>
+        </div>
+        <div>
+          <h4 class="mb-4 text-xs uppercase tracking-[0.2em] text-brand-gold">Quick Links</h4>
+          <ul class="space-y-2 text-sm text-brand-cream/70">
+            <li><a href="{% url 'store:home' %}" class="hover:text-brand-gold">Home</a></li>
+            <li><a href="{% url 'store:shop' %}" class="hover:text-brand-gold">Shop</a></li>
+            <li><a href="{% url 'store:about' %}" class="hover:text-brand-gold">About</a></li>
+            <li><a href="{% url 'store:contact' %}" class="hover:text-brand-gold">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="mb-4 text-xs uppercase tracking-[0.2em] text-brand-gold">Contact</h4>
+          <ul class="space-y-2 text-sm text-brand-cream/70">
+            <li>WhatsApp: +{{ whatsapp_number|default:"923001234567" }}</li>
+            <li>Email: hello@scentryryv.com</li>
+            <li>Nationwide Delivery</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="mb-4 text-xs uppercase tracking-[0.2em] text-brand-gold">Payment</h4>
+          <p class="text-sm text-brand-cream/70">Cash on Delivery Available Nationwide</p>
+          <p class="mt-2 text-sm text-brand-cream/50">Bank transfer also accepted</p>
+        </div>
+      </div>
+      <div class="gold-divider mt-12"></div>
+      <p class="text-center text-xs text-brand-cream/40">&copy; {% now "Y" %} Scentra Ryv. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Quick view modal -->
+  <div id="quick-view-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-brand-gold/20 bg-brand-charcoal p-8">
+      <button id="quick-view-close" class="absolute right-4 top-4 text-brand-cream/60 hover:text-brand-gold">&times;</button>
+      <div id="quick-view-content"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

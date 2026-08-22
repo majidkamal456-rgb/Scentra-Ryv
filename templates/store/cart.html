@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+  <h1 class="section-heading text-center">Your Cart</h1>
+  <div class="gold-divider"></div>
+
+  {% if cart|length %}
+  <div class="mt-12 grid gap-12 lg:grid-cols-3">
+    <div class="lg:col-span-2 space-y-6">
+      {% for item in cart %}
+      <div class="flex gap-6 border border-brand-gold/10 bg-brand-charcoal p-6">
+        <div class="h-28 w-20 flex-shrink-0 bg-gradient-to-b from-brand-gold/20 to-transparent">
+          {% if item.product.image_main %}
+            <img src="{{ item.product.image_main.url }}" alt="{{ item.product.name }}" class="h-full w-full object-cover">
+          {% endif %}
+        </div>
+        <div class="flex flex-1 flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 class="font-serif text-xl text-brand-cream">{{ item.product.name }}</h3>
+            <p class="text-sm text-brand-cream/50">{{ item.size }} · Rs. {{ item.price|floatformat:0 }} each</p>
+          </div>
+          <div class="mt-4 flex items-center gap-6 sm:mt-0">
+            <form method="post" action="{% url 'store:cart_update' %}" class="flex items-center gap-2">
+              {% csrf_token %}
+              <input type="hidden" name="key" value="{{ item.key }}">
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="form-input w-16 py-1 text-center text-sm" onchange="this.form.submit()">
+            </form>
+            <p class="font-serif text-lg text-brand-gold">Rs. {{ item.line_total|floatformat:0 }}</p>
+            <form method="post" action="{% url 'store:cart_remove' %}">
+              {% csrf_token %}
+              <input type="hidden" name="key" value="{{ item.key }}">
+              <button type="submit" class="text-brand-cream/40 transition hover:text-red-400" aria-label="Remove item">&times;</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="border border-brand-gold/20 bg-brand-charcoal p-8 h-fit">
+      <h2 class="font-serif text-2xl text-brand-gold">Order Summary</h2>
+      <div class="mt-6 space-y-3 text-sm">
+        <div class="flex justify-between text-brand-cream/70">
+          <span>Subtotal</span>
+          <span>Rs. {{ cart.get_subtotal|floatformat:0 }}</span>
+        </div>
+        <div class="flex justify-between text-brand-cream/70">
+          <span>Shipping</span>
+          <span>{% if cart.get_shipping %}Rs. {{ cart.get_shipping|floatformat:0 }}{% else %}Free{% endif %}</span>
+        </div>
+        <div class="gold-divider !my-4"></div>
+        <div class="flex justify-between font-serif text-xl text-brand-gold">
+          <span>Total</span>
+          <span>Rs. {{ cart.get_total|floatformat:0 }}</span>
+        </div>
+      </div>
+      <a href="{% url 'store:checkout' %}" class="btn-gold-filled mt-8 block w-full text-center">Proceed to Checkout</a>
+      <a href="{% url 'store:shop' %}" class="mt-4 block text-center text-sm text-brand-cream/50 hover:text-brand-gold">Continue Shopping</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="py-24 text-center">
+    <p class="text-brand-cream/50">Your cart is empty.</p>
+    <a href="{% url 'store:shop' %}" class="btn-gold mt-8 inline-block">Browse Fragrances</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

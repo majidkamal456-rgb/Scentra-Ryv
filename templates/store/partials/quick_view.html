@@ -1,0 +1,26 @@
+{% load static %}
+<div class="grid gap-8 md:grid-cols-2">
+  <div>
+    {% if product.image_main %}
+      <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square w-full object-cover">
+    {% else %}
+      <div class="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-charcoal to-brand-black">
+        <div class="h-40 w-24 rounded-t-full border border-brand-gold/40 bg-gradient-to-b from-brand-gold/30 to-transparent"></div>
+      </div>
+    {% endif %}
+  </div>
+  <div>
+    <h2 class="font-serif text-3xl text-brand-gold">{{ product.name }}</h2>
+    <p class="mt-2 text-brand-cream/60">{{ product.short_description }}</p>
+    <p class="mt-4 font-serif text-2xl text-brand-gold">Rs. {{ product.price|floatformat:0 }}</p>
+    <p class="mt-1 text-sm text-brand-cream/50">{{ product.size_ml }}</p>
+    <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-6">
+      {% csrf_token %}
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <input type="hidden" name="quantity" value="1">
+      <input type="hidden" name="size" value="{{ product.size_ml }}">
+      <button type="submit" class="btn-gold-filled w-full">Add to Cart</button>
+    </form>
+    <a href="{{ product.get_absolute_url }}" class="mt-4 block text-center text-sm text-brand-gold underline">View full details</a>
+  </div>
+</div>

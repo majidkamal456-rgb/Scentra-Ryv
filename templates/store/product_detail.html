@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+{% block meta_description %}{{ product.short_description }}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+  <div class="grid gap-12 lg:grid-cols-2">
+    <!-- Gallery -->
+    <div class="product-gallery">
+      {% if product.images.exists or product.image_main %}
+        <div class="swiper product-detail-swiper">
+          <div class="swiper-wrapper">
+            {% if product.image_main %}
+              <div class="swiper-slide">
+                <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square w-full object-cover">
+              </div>
+            {% endif %}
+            {% for img in product.images.all %}
+              <div class="swiper-slide">
+                <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" class="aspect-square w-full object-cover">
+              </div>
+            {% endfor %}
+          </div>
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-pagination"></div>
+        </div>
+      {% else %}
+        <div class="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-charcoal via-brand-black to-brand-charcoal">
+          <div class="text-center">
+            <div class="mx-auto mb-6 h-48 w-28 rounded-t-full border border-brand-gold/40 bg-gradient-to-b from-brand-gold/30 to-transparent"></div>
+            <span class="font-serif text-2xl text-brand-gold/60">{{ product.name }}</span>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Details -->
+    <div class="fade-section visible">
+      <p class="text-xs uppercase tracking-[0.3em] text-brand-gold">{{ product.gender }}</p>
+      <h1 class="mt-2 font-serif text-4xl md:text-5xl text-brand-cream">{{ product.name }}</h1>
+      <p class="mt-4 text-brand-cream/70">{{ product.short_description }}</p>
+      <p class="mt-6 font-serif text-3xl text-brand-gold">Rs. {{ product.price|floatformat:0 }}</p>
+
+      <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-8 space-y-6" x-data="{ size: '{{ product.size_ml }}', qty: 1 }">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+
+        <div>
+          <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Size</label>
+          <div class="flex gap-3">
+            <button type="button" @click="size='{{ product.size_ml }}'" :class="size==='{{ product.size_ml }}' ? 'border-brand-gold bg-brand-gold/10 text-brand-gold' : 'border-brand-gold/30 text-brand-cream/60'" class="border px-6 py-2 text-sm transition">{{ product.size_ml }}</button>
+          </div>
+          <input type="hidden" name="size" :value="size">
+        </div>
+
+        <div>
+          <label class="mb-2 block text-xs uppercase tracking-widest text-brand-cream/50">Quantity</label>
+          <div class="flex items-center gap-4">
+            <button type="button" @click="qty = Math.max(1, qty - 1)" class="flex h-10 w-10 items-center justify-center border border-brand-gold/30 text-brand-gold hover:border-brand-gold">−</button>
+            <span class="w-8 text-center font-serif text-xl" x-text="qty"></span>
+            <button type="button" @click="qty = Math.min({{ product.stock }}, qty + 1)" class="flex h-10 w-10 items-center justify-center border border-brand-gold/30 text-brand-gold hover:border-brand-gold">+</button>
+          </div>
+          <input type="hidden" name="quantity" :value="qty">
+        </div>
+
+        {% if product.in_stock %}
+          <button type="submit" class="btn-gold-filled w-full">Add to Cart</button>
+        {% else %}
+          <button type="button" disabled class="w-full cursor-not-allowed border border-brand-cream/20 py-3 text-sm uppercase tracking-widest text-brand-cream/30">Out of Stock</button>
+        {% endif %}
+      </form>
+
+      <div class="mt-10 space-y-4 border-t border-brand-gold/10 pt-10">
+        <h3 class="font-serif text-xl text-brand-gold">Scent Notes</h3>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="border border-brand-gold/10 p-4">
+            <p class="text-xs uppercase tracking-widest text-brand-gold">Top</p>
+            <p class="mt-2 text-sm text-brand-cream/70">{{ product.top_notes }}</p>
+          </div>
+          <div class="border border-brand-gold/10 p-4">
+            <p class="text-xs uppercase tracking-widest text-brand-gold">Heart</p>
+            <p class="mt-2 text-sm text-brand-cream/70">{{ product.heart_notes }}</p>
+          </div>
+          <div class="border border-brand-gold/10 p-4">
+            <p class="text-xs uppercase tracking-widest text-brand-gold">Base</p>
+            <p class="mt-2 text-sm text-brand-cream/70">{{ product.base_notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-sm leading-relaxed text-brand-cream/60">
+        {{ product.description|linebreaks }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Related -->
+  {% if related_products %}
+  <section class="fade-section mt-24 border-t border-brand-gold/10 pt-24">
+    <h2 class="section-heading text-center">You May Also Like</h2>
+    <div class="gold-divider"></div>
+    <div class="related-swiper swiper mt-12">
+      <div class="swiper-wrapper">
+        {% for related in related_products %}
+          <div class="swiper-slide">
+            {% include 'store/partials/product_card.html' with product=related %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+    </div>
+  </section>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  {% if product.images.exists or product.image_main %}
+  new Swiper('.product-detail-swiper', {
+    loop: true,
+    pagination: { el: '.product-detail-swiper .swiper-pagination', clickable: true },
+    navigation: {
+      nextEl: '.product-detail-swiper .swiper-button-next',
+      prevEl: '.product-detail-swiper .swiper-button-prev',
+    },
+  });
+  {% endif %}
+  new Swiper('.related-swiper', {
+    slidesPerView: 1,
+    spaceBetween: 24,
+    navigation: {
+      nextEl: '.related-swiper .swiper-button-next',
+      prevEl: '.related-swiper .swiper-button-prev',
+    },
+    breakpoints: {
+      640: { slidesPerView: 2 },
+      1024: { slidesPerView: 3 },
+    },
+  });
+</script>
+{% endblock %}
