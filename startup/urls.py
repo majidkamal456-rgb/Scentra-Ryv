@@ -17,7 +17,9 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
+from django.http import HttpResponse
 from django.urls import include, path, re_path
+from django.views.decorators.http import require_GET
 from django.views.static import serve
 
 from store.sitemaps import ProductSitemap, StaticViewSitemap
@@ -27,9 +29,23 @@ sitemaps = {
     'static': StaticViewSitemap,
 }
 
+
+@require_GET
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Allow: /",
+        "",
+        "Sitemap: https://scentraryv.pk/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('myproject.urls')),
+    path('robots.txt', robots_txt, name='robots_txt'),
     path(
         'sitemap.xml',
         sitemap,
