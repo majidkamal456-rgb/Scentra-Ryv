@@ -110,7 +110,7 @@
         <div class="md:col-span-3">
           <h4 class="mb-5 text-[11px] uppercase tracking-[0.25em] text-brand-gold">Contact</h4>
           <ul class="space-y-3 text-sm text-brand-cream/65">
-            <li><a href="https://wa.me/{{ whatsapp_number }}" target="_blank" rel="noopener" class="transition hover:text-brand-gold">WhatsApp · +92 317 7478167</a></li>
+            <li><a href="{% url 'store:contact' %}" class="transition hover:text-brand-gold">WhatsApp Support</a></li>
             <li><a href="mailto:{{ contact_email }}" class="transition hover:text-brand-gold">{{ contact_email }}</a></li>
             <li>Nationwide Delivery</li>
           </ul>
