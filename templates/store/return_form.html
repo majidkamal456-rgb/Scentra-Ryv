@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Returns &amp; Exchanges | Scentra Ryv{% endblock %}
+{% block meta_description %}Submit a return or exchange request for your Scentra Ryv 50ml fragrance. Hassle-free support within 15 days of delivery.{% endblock %}
+
+{% block content %}
+<section class="page-shell">
+  <div class="mx-auto max-w-3xl">
+    <div class="page-hero fade-section visible !pb-10">
+      <p class="section-eyebrow">Customer Care</p>
+      <h1 class="section-heading mt-4">Returns &amp; Exchanges</h1>
+      <div class="gold-divider"></div>
+      <p class="mx-auto mt-4 max-w-lg text-base leading-relaxed text-brand-mute">
+        Ordered a 50ml Scentra Ryv elixir and need help? Submit the form below — we aim to respond within 1–2 business days.
+      </p>
+    </div>
+
+    <div class="fade-section visible flex flex-wrap items-center justify-center gap-3">
+      <a href="{% url 'store:return_form' %}" class="chip chip-active">Return Form</a>
+      <a href="{% url 'store:shipping_policy' %}" class="chip">Shipping Policy</a>
+      <a href="{% url 'store:contact' %}" class="chip">Contact Us</a>
+    </div>
+
+    <div class="fade-section visible mt-12 grid gap-4 sm:grid-cols-3">
+      <div class="feature-tile !py-8">
+        <p class="font-serif text-4xl text-brand-gold">15</p>
+        <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-mute">Day Return Window</p>
+      </div>
+      <div class="feature-tile !py-8">
+        <p class="font-serif text-4xl text-brand-gold">50ml</p>
+        <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-mute">Standard Bottle Size</p>
+      </div>
+      <div class="feature-tile !py-8">
+        <p class="font-serif text-4xl text-brand-gold">Sealed</p>
+        <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-mute">Unopened Items Only</p>
+      </div>
+    </div>
+
+    <div class="surface fade-section visible mt-10 p-7 sm:p-10">
+      <h2 class="font-serif text-2xl text-brand-gold sm:text-3xl">Before You Apply</h2>
+      <div class="mt-6 space-y-5 text-[0.95rem] leading-[1.85] text-brand-cream/75">
+        <p>
+          Returns and exchanges are accepted within
+          <strong class="text-brand-cream">15 days</strong>
+          of delivery for unopened, sealed 50ml bottles in their original presentation box.
+        </p>
+        <ul class="space-y-4 border-t border-brand-gold/10 pt-6 text-brand-mute">
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold/70"></span>
+            <span>Opened, sprayed, or partially used fragrances cannot be returned for hygiene reasons.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold/70"></span>
+            <span>Items must arrive back in saleable condition with the original Scentra Ryv gift box. Replacement packaging may cost <strong class="text-brand-cream">Rs. 200–350</strong> if yours is missing or damaged.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold/70"></span>
+            <span>Exchanges depend on stock; otherwise a store credit or refund may be offered after inspection.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold/70"></span>
+            <span>Shipping fees on returns are non-refundable unless the mistake was ours (wrong or damaged item).</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="surface fade-section visible mt-8 p-7 sm:p-10">
+      <h2 class="font-serif text-2xl text-brand-gold sm:text-3xl">Return Request Form</h2>
+      <p class="mt-3 text-sm leading-relaxed text-brand-mute">Fields marked with * are required.</p>
+
+      <form method="post" enctype="multipart/form-data" class="mt-8 space-y-6">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Full Name *</label>
+          {{ form.full_name }}
+          {% if form.full_name.errors %}<p class="mt-2 text-sm text-red-300">{{ form.full_name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label class="form-label">Phone Number *</label>
+            {{ form.phone }}
+            <p class="mt-2 text-xs leading-relaxed text-brand-mute">11 digits — e.g. 03001234567</p>
+            {% if form.phone.errors %}<p class="mt-2 text-sm text-red-300">{{ form.phone.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label">Email (optional)</label>
+            {{ form.email }}
+            {% if form.email.errors %}<p class="mt-2 text-sm text-red-300">{{ form.email.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label class="form-label">Order Number *</label>
+            {{ form.order_number }}
+            {% if form.order_number.errors %}<p class="mt-2 text-sm text-red-300">{{ form.order_number.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label">Product Name *</label>
+            {{ form.product_name }}
+            {% if form.product_name.errors %}<p class="mt-2 text-sm text-red-300">{{ form.product_name.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Reason *</label>
+          {{ form.reason }}
+          {% if form.reason.errors %}<p class="mt-2 text-sm text-red-300">{{ form.reason.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="form-label">Details *</label>
+          {{ form.details }}
+          {% if form.details.errors %}<p class="mt-2 text-sm text-red-300">{{ form.details.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="form-label">Photo (optional)</label>
+          <div class="mt-1 border border-dashed border-brand-gold/30 bg-brand-ink/40 px-5 py-6">
+            {{ form.photo }}
+            <p class="mt-3 text-xs leading-relaxed text-brand-mute">
+              Upload a photo if the bottle or gift box arrived damaged — JPG, PNG, or PDF, max 5MB.
+            </p>
+          </div>
+          {% if form.photo.errors %}<p class="mt-2 text-sm text-red-300">{{ form.photo.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="flex flex-col gap-4 border-t border-brand-gold/10 pt-8 sm:flex-row sm:items-center">
+          <button type="submit" class="btn-gold-filled w-full sm:w-auto">Submit Return Request</button>
+          <a href="https://wa.me/{{ whatsapp_number }}" target="_blank" rel="noopener" class="btn-gold w-full text-center sm:w-auto">
+            WhatsApp Support
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <p class="fade-section visible mt-8 text-center text-sm leading-relaxed text-brand-mute">
+      Prefer WhatsApp? Message us at
+      <a href="https://wa.me/{{ whatsapp_number }}" target="_blank" rel="noopener" class="text-brand-gold underline">+92 317 7478167</a>
+      with your order number.
+    </p>
+  </div>
+</section>
+{% endblock %}

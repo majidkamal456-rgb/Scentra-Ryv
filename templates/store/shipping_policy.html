@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Shipping Policy | Scentra Ryv{% endblock %}
+{% block meta_description %}Scentra Ryv shipping across Pakistan — 50ml fragrances in premium gift boxes, dispatched in 1–2 days, delivered in 2–5 business days.{% endblock %}
+
+{% block content %}
+<section class="page-shell">
+  <div class="mx-auto max-w-3xl">
+    <div class="page-hero fade-section visible !pb-10">
+      <p class="section-eyebrow">Delivery</p>
+      <h1 class="section-heading mt-4">Shipping Policy</h1>
+      <div class="gold-divider"></div>
+      <p class="mx-auto mt-4 max-w-lg text-base leading-relaxed text-brand-mute">
+        Fast, reliable delivery of our 50ml fragrances — beautifully boxed and shipped nationwide across Pakistan.
+      </p>
+    </div>
+
+    <div class="fade-section visible flex flex-wrap items-center justify-center gap-3">
+      <a href="{% url 'store:return_form' %}" class="chip">Return Form</a>
+      <a href="{% url 'store:shipping_policy' %}" class="chip chip-active">Shipping Policy</a>
+      <a href="{% url 'store:contact' %}" class="chip">Contact Us</a>
+    </div>
+
+    <div class="fade-section visible mt-12 grid gap-4 sm:grid-cols-3">
+      <div class="feature-tile !py-8">
+        <p class="font-serif text-4xl text-brand-gold">1–2</p>
+        <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-mute">Days Processing</p>
+      </div>
+      <div class="feature-tile !py-8">
+        <p class="font-serif text-4xl text-brand-gold">2–5</p>
+        <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-mute">Days Delivery</p>
+      </div>
+      <div class="feature-tile !py-8">
+        <p class="font-serif text-4xl text-brand-gold">PK</p>
+        <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-mute">Nationwide</p>
+      </div>
+    </div>
+
+    <div class="surface fade-section visible mt-10 space-y-10 p-7 sm:p-10">
+      <section>
+        <h2 class="font-serif text-2xl text-brand-gold sm:text-3xl">How We Ship</h2>
+        <div class="mt-6 space-y-5 text-[0.95rem] leading-[1.85] text-brand-cream/75">
+          <p>
+            At <strong class="text-brand-cream">Scentra Ryv</strong>, every order is handled with the same care we put into our fragrances.
+            We ship across Pakistan through trusted courier partners so your 50ml elixir arrives safely in our signature gift box.
+          </p>
+          <p>
+            Orders are typically processed and dispatched within
+            <strong class="text-brand-cream">1–2 business days</strong>
+            after payment confirmation. Most locations receive their parcel within
+            <strong class="text-brand-cream">2–5 business days</strong>.
+          </p>
+        </div>
+      </section>
+
+      <section class="border-t border-brand-gold/10 pt-10">
+        <h2 class="font-serif text-2xl text-brand-gold sm:text-3xl">Shipping Rates</h2>
+        <p class="mt-6 text-[0.95rem] leading-[1.85] text-brand-cream/75">
+          Flat-rate shipping applies per order — no extra charge for additional 50ml bottles in the same shipment.
+        </p>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+          <div class="border border-brand-gold/15 bg-brand-ink/40 px-5 py-6 text-center">
+            <p class="text-[11px] uppercase tracking-[0.2em] text-brand-mute">Punjab &amp; Default</p>
+            <p class="mt-3 font-serif text-3xl text-brand-gold">Rs. {{ nearby_shipping|floatformat:0 }}</p>
+          </div>
+          <div class="border border-brand-gold/15 bg-brand-ink/40 px-5 py-6 text-center">
+            <p class="text-[11px] uppercase tracking-[0.2em] text-brand-mute">Sindh · Balochistan · KPK</p>
+            <p class="mt-3 font-serif text-3xl text-brand-gold">Rs. {{ other_shipping|floatformat:0 }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="border-t border-brand-gold/10 pt-10">
+        <h2 class="font-serif text-2xl text-brand-gold sm:text-3xl">Packaging</h2>
+        <div class="mt-6 space-y-5 text-[0.95rem] leading-[1.85] text-brand-cream/75">
+          <p>
+            Each 50ml bottle is secured in a protective Scentra Ryv presentation box.
+            Standalone replacement boxes are priced between
+            <strong class="text-brand-cream">Rs. 200–350</strong>
+            depending on style and availability.
+          </p>
+          <p>
+            Please inspect your parcel on delivery and contact us immediately if the outer box shows signs of damage.
+          </p>
+        </div>
+      </section>
+
+      <section class="border-t border-brand-gold/10 pt-10">
+        <h2 class="font-serif text-2xl text-brand-gold sm:text-3xl">Tracking &amp; Delays</h2>
+        <div class="mt-6 space-y-5 text-[0.95rem] leading-[1.85] text-brand-cream/75">
+          <p>
+            Once your order leaves our facility, tracking details are shared via SMS or WhatsApp when provided by the courier.
+            Scentra Ryv cannot be held responsible for delays caused by weather, public holidays, remote-area routing,
+            or events outside our control once the shipment is with the courier.
+          </p>
+          <p>
+            If delivery is taking longer than expected, share your order number — our team will follow up with the carrier.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <div class="fade-section visible mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+      <a href="{% url 'store:contact' %}" class="btn-gold w-full text-center sm:w-auto">Contact Us</a>
+      <a href="https://wa.me/{{ whatsapp_number }}" target="_blank" rel="noopener" class="btn-gold-filled w-full text-center sm:w-auto">
+        WhatsApp · +92 317 7478167
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

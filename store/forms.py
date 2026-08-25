@@ -92,3 +92,78 @@ class CheckoutForm(forms.ModelForm):
                 'Payment screenshot is required for bank transfer orders.',
             )
         return cleaned
+
+
+class ReturnRequestForm(forms.Form):
+    REASON_CHOICES = [
+        ('damaged', 'Damaged or leaked in transit'),
+        ('wrong_item', 'Wrong product received'),
+        ('not_as_described', 'Product not as described'),
+        ('quality', 'Quality concern'),
+        ('other', 'Other'),
+    ]
+
+    full_name = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Your full name',
+        }),
+    )
+    phone = forms.CharField(
+        max_length=11,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': '03XXXXXXXXX',
+            'inputmode': 'numeric',
+            'autocomplete': 'tel',
+            'maxlength': '11',
+        }),
+    )
+    email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Email (optional)',
+        }),
+    )
+    order_number = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'e.g. SR-20260825-ABC123',
+        }),
+    )
+    product_name = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Perfume name from your order',
+        }),
+    )
+    reason = forms.ChoiceField(
+        choices=REASON_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-input'}),
+    )
+    details = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-input',
+            'rows': 4,
+            'placeholder': 'Tell us what happened and how we can help',
+        }),
+    )
+    photo = forms.FileField(
+        required=False,
+        validators=[validate_payment_screenshot],
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'form-input',
+            'accept': 'image/jpeg,image/png,application/pdf',
+        }),
+    )
+
+    def clean_phone(self):
+        phone = re.sub(r'\D', '', self.cleaned_data['phone'].strip())
+        if phone.startswith('92') and len(phone) == 12:
+            phone = '0' + phone[2:]
+        validate_phone(phone)
+        return phone

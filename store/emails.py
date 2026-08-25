@@ -54,3 +54,59 @@ def send_order_notification(order):
     except Exception:
         logger.exception('Failed to send order notification for %s', order.order_number)
         return False
+
+
+def send_return_request_notification(form_data, photo=None):
+    """Email shop owner when a customer submits a return request."""
+    recipient = (
+        getattr(settings, 'ORDER_NOTIFICATION_EMAIL', '')
+        or getattr(settings, 'CONTACT_EMAIL', '')
+        or 'scentraryv@gmail.com'
+    )
+
+    if not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
+        logger.warning(
+            'Return request email NOT sent — EMAIL_HOST_PASSWORD is empty in .env.'
+        )
+        return False
+
+    reason_label = dict(form_data['reason_choices']).get(
+        form_data['reason'],
+        form_data['reason'],
+    )
+    lines = [
+        'New return / exchange request — Scentra Ryv',
+        '',
+        f"Name: {form_data['full_name']}",
+        f"Phone: {form_data['phone']}",
+        f"Email: {form_data.get('email') or '—'}",
+        f"Order #: {form_data['order_number']}",
+        f"Product: {form_data['product_name']}",
+        f"Reason: {reason_label}",
+        '',
+        'Details:',
+        form_data['details'],
+    ]
+    text_body = '\n'.join(lines)
+    subject = f"Return request — {form_data['order_number']} — {form_data['full_name']}"
+
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or recipient
+    reply_to = [form_data['email']] if form_data.get('email') else None
+    message = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body,
+        from_email=from_email,
+        to=[recipient],
+        reply_to=reply_to,
+    )
+
+    if photo:
+        message.attach(photo.name, photo.read(), photo.content_type or 'application/octet-stream')
+
+    try:
+        message.send(fail_silently=False)
+        logger.info('Return request sent to %s for order %s', recipient, form_data['order_number'])
+        return True
+    except Exception:
+        logger.exception('Failed to send return request for %s', form_data['order_number'])
+        return False

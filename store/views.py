@@ -7,8 +7,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .cart import Cart
-from .emails import send_order_notification
-from .forms import CheckoutForm
+from .emails import send_order_notification, send_return_request_notification
+from .forms import CheckoutForm, ReturnRequestForm
 from .models import Order, OrderItem, Product
 from .shipping import REMOTE_CITIES, REMOTE_CITY_LABELS, NEARBY_CITY_LABELS
 
@@ -57,6 +57,41 @@ def about(request):
 
 def contact(request):
     return render(request, 'store/contact.html')
+
+
+def return_form(request):
+    if request.method == 'POST':
+        form = ReturnRequestForm(request.POST, request.FILES)
+        if form.is_valid():
+            data = form.cleaned_data
+            send_return_request_notification({
+                'full_name': data['full_name'],
+                'phone': data['phone'],
+                'email': data.get('email'),
+                'order_number': data['order_number'],
+                'product_name': data['product_name'],
+                'reason': data['reason'],
+                'reason_choices': ReturnRequestForm.REASON_CHOICES,
+                'details': data['details'],
+            }, photo=data.get('photo'))
+            messages.success(
+                request,
+                'Your return request has been received. Our team will contact you within 1–2 business days.',
+            )
+            return redirect('store:return_form')
+    else:
+        form = ReturnRequestForm()
+
+    return render(request, 'store/return_form.html', {'form': form})
+
+
+def shipping_policy(request):
+    nearby_rate = settings.SHIPPING_NEARBY_RATE
+    remote_rate = settings.SHIPPING_OTHER_RATE
+    return render(request, 'store/shipping_policy.html', {
+        'nearby_shipping': nearby_rate,
+        'other_shipping': remote_rate,
+    })
 
 
 def cart_view(request):

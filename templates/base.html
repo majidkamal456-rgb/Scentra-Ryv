@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Scentra Ryv{% endblock %} | Essence & Elixir</title>
-  <meta name="description" content="{% block meta_description %}Luxury perfumes by Scentra Ryv — Essence & Elixir. Premium fragrances with cash on delivery nationwide.{% endblock %}">
+  <title>{% block title %}Scentra Ryv | Essence &amp; Elixir{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Luxury perfumes by Scentra Ryv — Essence &amp; Elixir. Premium fragrances with cash on delivery nationwide.{% endblock %}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,6 +95,8 @@
             <li><a href="{% url 'store:shop' %}" class="transition hover:text-brand-gold">Shop</a></li>
             <li><a href="{% url 'store:about' %}" class="transition hover:text-brand-gold">About</a></li>
             <li><a href="{% url 'store:contact' %}" class="transition hover:text-brand-gold">Contact</a></li>
+            <li><a href="{% url 'store:return_form' %}" class="transition hover:text-brand-gold">Return Form</a></li>
+            <li><a href="{% url 'store:shipping_policy' %}" class="transition hover:text-brand-gold">Shipping Policy</a></li>
           </ul>
         </div>
         <div class="md:col-span-3">
