@@ -15,15 +15,35 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.contrib.sitemaps.views import sitemap
+from django.urls import include, path, re_path
+from django.views.static import serve
+
+from store.sitemaps import ProductSitemap, StaticViewSitemap
+
+sitemaps = {
+    'products': ProductSitemap,
+    'static': StaticViewSitemap,
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('myproject.urls')),
+    path(
+        'sitemap.xml',
+        sitemap,
+        {'sitemaps': sitemaps},
+        name='django.contrib.sitemaps.views.sitemap',
+    ),
     path('', include('store.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Product images must be reachable with DEBUG=False (single-server deploy).
+urlpatterns += [
+    re_path(
+        r'^media/(?P<path>.*)$',
+        serve,
+        {'document_root': settings.MEDIA_ROOT},
+    ),
+]
