@@ -45,6 +45,7 @@ def robots_txt(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('myproject.urls')),
+    path('api/store/', include('store.api_urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
     path(
         'sitemap.xml',
