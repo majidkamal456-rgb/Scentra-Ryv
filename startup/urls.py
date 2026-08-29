@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.http import FileResponse, Http404, HttpResponse
 from django.urls import include, path, re_path
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 from django.views.static import serve
 
 from store.sitemaps import ProductSitemap, StaticViewSitemap
@@ -30,7 +30,6 @@ sitemaps = {
 }
 
 OG_BANNER_PATH = settings.BASE_DIR / 'static' / 'images' / 'scentra-ryv-og-banner.png'
-# Fallback if only collectstatic copy exists
 OG_BANNER_FALLBACKS = (
     OG_BANNER_PATH,
     settings.BASE_DIR / 'staticfiles' / 'images' / 'scentra-ryv-og-banner.png',
@@ -49,19 +48,23 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
-@require_GET
+@require_http_methods(['GET', 'HEAD'])
 def og_banner(request):
-    """Stable absolute URL for social crawlers (WhatsApp / Facebook / Twitter)."""
-    for path_candidate in OG_BANNER_FALLBACKS:
-        if path_candidate.is_file():
-            response = FileResponse(
-                path_candidate.open('rb'),
-                content_type='image/png',
-            )
-            response['Cache-Control'] = 'public, max-age=86400'
-            response['Content-Length'] = str(path_candidate.stat().st_size)
-            return response
-    raise Http404('OG banner not found')
+    """Stable URL for social crawlers. HEAD must work — WhatsApp/FB probe with HEAD."""
+    banner = next((p for p in OG_BANNER_FALLBACKS if p.is_file()), None)
+    if not banner:
+        raise Http404('OG banner not found')
+
+    if request.method == 'HEAD':
+        response = HttpResponse(content_type='image/png')
+        response['Content-Length'] = str(banner.stat().st_size)
+        response['Cache-Control'] = 'public, max-age=86400'
+        return response
+
+    response = FileResponse(banner.open('rb'), content_type='image/png')
+    response['Cache-Control'] = 'public, max-age=86400'
+    response['Content-Length'] = str(banner.stat().st_size)
+    return response
 
 
 urlpatterns = [
