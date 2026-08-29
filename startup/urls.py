@@ -17,7 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.urls import include, path, re_path
 from django.views.decorators.http import require_GET
 from django.views.static import serve
@@ -28,6 +28,13 @@ sitemaps = {
     'products': ProductSitemap,
     'static': StaticViewSitemap,
 }
+
+OG_BANNER_PATH = settings.BASE_DIR / 'static' / 'images' / 'scentra-ryv-og-banner.png'
+# Fallback if only collectstatic copy exists
+OG_BANNER_FALLBACKS = (
+    OG_BANNER_PATH,
+    settings.BASE_DIR / 'staticfiles' / 'images' / 'scentra-ryv-og-banner.png',
+)
 
 
 @require_GET
@@ -42,11 +49,27 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
+@require_GET
+def og_banner(request):
+    """Stable absolute URL for social crawlers (WhatsApp / Facebook / Twitter)."""
+    for path_candidate in OG_BANNER_FALLBACKS:
+        if path_candidate.is_file():
+            response = FileResponse(
+                path_candidate.open('rb'),
+                content_type='image/png',
+            )
+            response['Cache-Control'] = 'public, max-age=86400'
+            response['Content-Length'] = str(path_candidate.stat().st_size)
+            return response
+    raise Http404('OG banner not found')
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('myproject.urls')),
     path('api/store/', include('store.api_urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
+    path('og-banner.png', og_banner, name='og_banner'),
     path(
         'sitemap.xml',
         sitemap,

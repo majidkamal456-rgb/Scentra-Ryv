@@ -30,14 +30,28 @@ export const metadata: Metadata = {
   },
   description:
     "Luxury perfumes by Scentra Ryv — Essence & Elixir. Premium fragrances with cash on delivery nationwide.",
+  metadataBase: new URL("https://www.scentraryv.pk"),
   openGraph: {
     title: "Scentra Ryv — Essence & Elixir",
     description: "Premium perfumes with Cash on Delivery across Pakistan.",
     url: "https://www.scentraryv.pk",
+    siteName: "Scentra Ryv",
     type: "website",
+    images: [
+      {
+        url: "https://www.scentraryv.pk/og-banner.png",
+        width: 1200,
+        height: 630,
+        alt: "Scentra Ryv — Essence & Elixir",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
+    title: "Scentra Ryv — Essence & Elixir",
+    description: "Premium perfumes with Cash on Delivery across Pakistan.",
+    images: ["https://www.scentraryv.pk/og-banner.png"],
   },
 };
 
