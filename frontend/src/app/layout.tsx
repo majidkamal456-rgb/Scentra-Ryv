@@ -39,11 +39,11 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.scentraryv.pk/static/images/scentra-ryv-og-banner.png",
+        url: "https://www.scentraryv.pk/static/images/scentra-ryv-og-banner.jpg",
         width: 1200,
         height: 630,
         alt: "Scentra Ryv — Essence & Elixir",
-        type: "image/png",
+        type: "image/jpeg",
       },
     ],
   },
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Scentra Ryv — Essence & Elixir",
     description: "Premium perfumes with Cash on Delivery across Pakistan.",
-    images: ["https://www.scentraryv.pk/static/images/scentra-ryv-og-banner.png"],
+    images: ["https://www.scentraryv.pk/static/images/scentra-ryv-og-banner.jpg"],
   },
 };
 

@@ -29,9 +29,10 @@ sitemaps = {
     'static': StaticViewSitemap,
 }
 
-OG_BANNER_PATH = settings.BASE_DIR / 'static' / 'images' / 'scentra-ryv-og-banner.png'
 OG_BANNER_FALLBACKS = (
-    OG_BANNER_PATH,
+    settings.BASE_DIR / 'static' / 'images' / 'scentra-ryv-og-banner.jpg',
+    settings.BASE_DIR / 'staticfiles' / 'images' / 'scentra-ryv-og-banner.jpg',
+    settings.BASE_DIR / 'static' / 'images' / 'scentra-ryv-og-banner.png',
     settings.BASE_DIR / 'staticfiles' / 'images' / 'scentra-ryv-og-banner.png',
 )
 
@@ -50,18 +51,20 @@ def robots_txt(request):
 
 @require_http_methods(['GET', 'HEAD'])
 def og_banner(request):
-    """Stable URL for social crawlers. HEAD must work — WhatsApp/FB probe with HEAD."""
+    """Stable URL for social crawlers. Prefer JPEG for WhatsApp large cover preview."""
     banner = next((p for p in OG_BANNER_FALLBACKS if p.is_file()), None)
     if not banner:
         raise Http404('OG banner not found')
 
+    content_type = 'image/jpeg' if banner.suffix.lower() in ('.jpg', '.jpeg') else 'image/png'
+
     if request.method == 'HEAD':
-        response = HttpResponse(content_type='image/png')
+        response = HttpResponse(content_type=content_type)
         response['Content-Length'] = str(banner.stat().st_size)
         response['Cache-Control'] = 'public, max-age=86400'
         return response
 
-    response = FileResponse(banner.open('rb'), content_type='image/png')
+    response = FileResponse(banner.open('rb'), content_type=content_type)
     response['Cache-Control'] = 'public, max-age=86400'
     response['Content-Length'] = str(banner.stat().st_size)
     return response
@@ -73,6 +76,7 @@ urlpatterns = [
     path('api/store/', include('store.api_urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('og-banner.png', og_banner, name='og_banner'),
+    path('og-banner.jpg', og_banner, name='og_banner_jpg'),
     path(
         'sitemap.xml',
         sitemap,
