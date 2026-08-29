@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.http import FileResponse, Http404, HttpResponse
 from django.urls import include, path, re_path
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods
 from django.views.static import serve
 
 from store.sitemaps import ProductSitemap, StaticViewSitemap
