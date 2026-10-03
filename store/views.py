@@ -3,25 +3,35 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from .cart import Cart
 from .emails import send_order_notification, send_return_request_notification
-from .forms import CheckoutForm, ReturnRequestForm
-from .models import Order, OrderItem, Product
-from .shipping import REMOTE_CITIES, REMOTE_CITY_LABELS, NEARBY_CITY_LABELS
+from .forms import CheckoutForm, ProductReviewForm, ReturnRequestForm
+from .models import Order, OrderItem, Product, annotate_product_ratings
+from .shipping import (
+    NEARBY_CITIES,
+    NEARBY_CITY_LABELS,
+    NEARBY_PROVINCE_KEYWORDS,
+    REMOTE_CITIES,
+    REMOTE_CITY_LABELS,
+    REMOTE_PROVINCE_KEYWORDS,
+)
 
 
 def home(request):
-    featured = Product.objects.filter(is_featured=True)[:6]
-    if featured.count() < 6:
-        featured = Product.objects.all()[:6]
+    featured_qs = annotate_product_ratings(Product.objects.filter(is_featured=True))
+    if featured_qs.count() < 6:
+        featured = annotate_product_ratings(Product.objects.all())[:6]
+    else:
+        featured = featured_qs[:6]
     return render(request, 'store/home.html', {'products': featured})
 
 
 def shop(request):
-    products = Product.objects.all()
+    products = annotate_product_ratings(Product.objects.all())
     sort = request.GET.get('sort', 'name')
     gender = request.GET.get('gender', '')
 
@@ -43,11 +53,27 @@ def shop(request):
 
 
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug)
-    related = Product.objects.exclude(pk=product.pk)[:6]
+    product = get_object_or_404(annotate_product_ratings(Product.objects.all()), slug=slug)
+    related = annotate_product_ratings(Product.objects.exclude(pk=product.pk))[:6]
+    reviews = product.approved_reviews.all()
+    review_images = [r for r in reviews if r.image]
+    review_form = ProductReviewForm()
+
+    if request.method == 'POST' and request.POST.get('form_type') == 'review':
+        review_form = ProductReviewForm(request.POST, request.FILES)
+        if review_form.is_valid():
+            review = review_form.save(commit=False)
+            review.product = product
+            review.save()
+            messages.success(request, 'Thank you! Your review has been submitted.')
+            return redirect(product.get_absolute_url() + '#reviews')
+
     return render(request, 'store/product_detail.html', {
         'product': product,
         'related_products': related,
+        'reviews': reviews,
+        'review_images': review_images,
+        'review_form': review_form,
     })
 
 
@@ -94,6 +120,15 @@ def shipping_policy(request):
     })
 
 
+def _cart_drawer_html(request, cart=None):
+    cart = cart or Cart(request)
+    return render_to_string(
+        'store/partials/cart_drawer_body.html',
+        {'cart': cart, 'cart_count': len(cart)},
+        request=request,
+    )
+
+
 def cart_view(request):
     cart = Cart(request)
     nearby_shipping, other_shipping = cart.get_shipping_range()
@@ -107,6 +142,19 @@ def cart_view(request):
         'total_from': subtotal + nearby_shipping,
         'total_to': subtotal + other_shipping,
     })
+
+
+@require_GET
+def cart_drawer(request):
+    cart = Cart(request)
+    html = _cart_drawer_html(request, cart)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': len(cart),
+            'html': html,
+        })
+    return redirect('store:cart')
 
 
 @require_POST
@@ -132,6 +180,9 @@ def cart_add(request):
             'success': True,
             'message': f'{product.name} added to cart.',
             'cart_count': len(cart),
+            'product_name': product.name,
+            'product_image': product.image_main.url if product.image_main else '',
+            'drawer_html': _cart_drawer_html(request, cart),
         })
 
     messages.success(request, f'{product.name} added to cart.')
@@ -145,6 +196,12 @@ def cart_update(request):
     quantity = int(request.POST.get('quantity', 1))
     cart = Cart(request)
     cart.update(key, quantity)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': len(cart),
+            'html': _cart_drawer_html(request, cart),
+        })
     messages.success(request, 'Cart updated.')
     return redirect('store:cart')
 
@@ -154,6 +211,12 @@ def cart_remove(request):
     key = request.POST.get('key')
     cart = Cart(request)
     cart.remove(key)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': len(cart),
+            'html': _cart_drawer_html(request, cart),
+        })
     messages.success(request, 'Item removed from cart.')
     return redirect('store:cart')
 
@@ -191,6 +254,7 @@ def checkout(request):
             order = form.save(commit=False)
             payment_method = form.cleaned_data['payment_method']
             city = form.cleaned_data['city']
+            address = form.cleaned_data.get('address') or ''
 
             if payment_method == Order.PAYMENT_COD:
                 order.status = Order.STATUS_PENDING_COD
@@ -198,8 +262,8 @@ def checkout(request):
                 order.status = Order.STATUS_PENDING_VERIFICATION
 
             order.subtotal = cart.get_subtotal()
-            order.shipping = cart.get_shipping(city)
-            order.total_amount = cart.get_total(city)
+            order.shipping = cart.get_shipping(city, address=address)
+            order.total_amount = cart.get_total(city, address=address)
 
             with transaction.atomic():
                 order.save()
@@ -237,7 +301,10 @@ def checkout(request):
         'checkout_draft': request.session.get(CHECKOUT_DRAFT_KEY) or {},
         'prefer_local_draft': request.method != 'POST',
         'shipping_config': {
+            'nearbyCities': sorted(NEARBY_CITIES),
+            'nearbyProvinces': sorted(NEARBY_PROVINCE_KEYWORDS),
             'remoteCities': sorted(REMOTE_CITIES),
+            'remoteProvinces': sorted(REMOTE_PROVINCE_KEYWORDS),
             'punjabRate': float(settings.SHIPPING_NEARBY_RATE),
             'remoteRate': float(settings.SHIPPING_OTHER_RATE),
             'itemCount': len(cart),
@@ -252,7 +319,7 @@ def order_confirmation(request, order_number):
 
 
 def quick_view(request, slug):
-    product = get_object_or_404(Product, slug=slug)
+    product = get_object_or_404(annotate_product_ratings(Product.objects.all()), slug=slug)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render(request, 'store/partials/quick_view.html', {'product': product})
     return redirect(product.get_absolute_url())

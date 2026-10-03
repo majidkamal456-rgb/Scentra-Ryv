@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env', override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -171,9 +171,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Store / checkout settings
-# Punjab & other non-remote cities = 280; Sindh / Balochistan / KPK = 350.
-SHIPPING_NEARBY_RATE = Decimal(os.getenv('SHIPPING_NEARBY_RATE', '280.00'))  # Punjab
-SHIPPING_OTHER_RATE = Decimal(os.getenv('SHIPPING_OTHER_RATE', '350.00'))  # remote provinces
+# Punjab / ICT = 250; Sindh / Balochistan / KPK / Kashmir = 280.
+SHIPPING_NEARBY_RATE = Decimal(os.getenv('SHIPPING_NEARBY_RATE', '250.00'))  # Punjab
+SHIPPING_OTHER_RATE = Decimal(os.getenv('SHIPPING_OTHER_RATE', '280.00'))  # remote provinces
 WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '923177478167')
 CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', 'scentraryv@gmail.com')
 ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_EMAIL)

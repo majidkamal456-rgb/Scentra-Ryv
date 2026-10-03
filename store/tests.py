@@ -11,8 +11,8 @@ from store.shipping import (
 
 
 @override_settings(
-    SHIPPING_NEARBY_RATE=Decimal('280.00'),
-    SHIPPING_OTHER_RATE=Decimal('350.00'),
+    SHIPPING_NEARBY_RATE=Decimal('250.00'),
+    SHIPPING_OTHER_RATE=Decimal('280.00'),
 )
 class ShippingTests(SimpleTestCase):
     def test_remote_vs_punjab(self):
@@ -27,16 +27,16 @@ class ShippingTests(SimpleTestCase):
         self.assertFalse(is_nearby_city('Karachi'))
 
     def test_fixed_rates_no_extra(self):
-        self.assertEqual(calculate_shipping(1, 'Lahore'), Decimal('280.00'))
-        self.assertEqual(calculate_shipping(2, 'Lahore'), Decimal('280.00'))
-        self.assertEqual(calculate_shipping(3, 'Lahore'), Decimal('280.00'))
-        self.assertEqual(calculate_shipping(1, 'Karachi'), Decimal('350.00'))
-        self.assertEqual(calculate_shipping(3, 'Quetta'), Decimal('350.00'))
+        self.assertEqual(calculate_shipping(1, 'Lahore'), Decimal('250.00'))
+        self.assertEqual(calculate_shipping(2, 'Lahore'), Decimal('250.00'))
+        self.assertEqual(calculate_shipping(3, 'Lahore'), Decimal('250.00'))
+        self.assertEqual(calculate_shipping(1, 'Karachi'), Decimal('280.00'))
+        self.assertEqual(calculate_shipping(3, 'Quetta'), Decimal('280.00'))
 
     def test_empty_cart(self):
         self.assertEqual(calculate_shipping(0, 'Lahore'), Decimal('0.00'))
 
     def test_range(self):
         punjab, remote = shipping_range(1)
-        self.assertEqual(punjab, Decimal('280.00'))
-        self.assertEqual(remote, Decimal('350.00'))
+        self.assertEqual(punjab, Decimal('250.00'))
+        self.assertEqual(remote, Decimal('280.00'))

@@ -71,16 +71,16 @@ class Cart:
     def get_subtotal(self):
         return sum(item['line_total'] for item in self)
 
-    def get_shipping(self, city=None):
+    def get_shipping(self, city=None, address=None):
         from .shipping import calculate_shipping
-        return calculate_shipping(len(self), city=city)
+        return calculate_shipping(len(self), city=city, address=address)
 
     def get_shipping_range(self):
         from .shipping import shipping_range
         return shipping_range(len(self))
 
-    def get_total(self, city=None):
-        return self.get_subtotal() + self.get_shipping(city)
+    def get_total(self, city=None, address=None):
+        return self.get_subtotal() + self.get_shipping(city, address=address)
 
     def is_empty(self):
         return len(self.cart) == 0

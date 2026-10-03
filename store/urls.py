@@ -14,6 +14,7 @@ urlpatterns = [
     path('returns/', views.return_form, name='return_form'),
     path('shipping-policy/', views.shipping_policy, name='shipping_policy'),
     path('cart/', views.cart_view, name='cart'),
+    path('cart/drawer/', views.cart_drawer, name='cart_drawer'),
     path('cart/add/', views.cart_add, name='cart_add'),
     path('cart/update/', views.cart_update, name='cart_update'),
     path('cart/remove/', views.cart_remove, name='cart_remove'),

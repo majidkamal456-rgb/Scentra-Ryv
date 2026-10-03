@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg, Count, Q
 from django.urls import reverse
 from django.utils.text import slugify
 
@@ -49,6 +50,41 @@ class Product(models.Model):
     def in_stock(self):
         return self.stock > 0
 
+    @property
+    def approved_reviews(self):
+        return self.reviews.filter(is_approved=True)
+
+    @property
+    def average_rating(self):
+        if hasattr(self, '_avg_rating'):
+            return round(float(self._avg_rating), 1) if self._avg_rating else 0.0
+        result = self.approved_reviews.aggregate(avg=Avg('rating'))['avg']
+        return round(float(result), 1) if result else 0.0
+
+    @property
+    def review_count(self):
+        if hasattr(self, '_review_count'):
+            return int(self._review_count or 0)
+        return self.approved_reviews.count()
+
+    @property
+    def rating_breakdown(self):
+        """Return 5→1 star histogram rows with count + percent."""
+        total = self.review_count
+        counts = {i: 0 for i in range(1, 6)}
+        for row in self.approved_reviews.values('rating').annotate(c=Count('id')):
+            rating = int(row['rating'])
+            if rating in counts:
+                counts[rating] = row['c']
+        return [
+            {
+                'stars': stars,
+                'count': counts[stars],
+                'percent': int(round((counts[stars] / total) * 100)) if total else 0,
+            }
+            for stars in range(5, 0, -1)
+        ]
+
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
@@ -61,6 +97,33 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f'{self.product.name} — image {self.pk}'
+
+
+class ProductReview(models.Model):
+    RATING_CHOICES = [(i, f'{i} star{"s" if i != 1 else ""}') for i in range(1, 6)]
+
+    product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
+    name = models.CharField(max_length=120)
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    comment = models.TextField()
+    image = models.ImageField(upload_to='reviews/images/', blank=True, null=True)
+    video = models.FileField(upload_to='reviews/videos/', blank=True, null=True)
+    is_approved = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.rating}★ by {self.name} on {self.product.name}'
+
+
+def annotate_product_ratings(queryset):
+    """Attach average rating + review count for list/card views."""
+    return queryset.annotate(
+        _avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
+        _review_count=Count('reviews', filter=Q(reviews__is_approved=True)),
+    )
 
 
 class Order(models.Model):

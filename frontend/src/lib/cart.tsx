@@ -14,6 +14,8 @@ import type { CartItem, Product } from "./api";
 const STORAGE_KEY = "scentra_cart_v1";
 
 type CartContextValue = {
+  /** False until the cart has been read from localStorage (avoids empty-state flash). */
+  ready: boolean;
   items: CartItem[];
   count: number;
   subtotal: number;
@@ -102,8 +104,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => {
     const count = items.reduce((s, i) => s + i.quantity, 0);
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    return { items, count, subtotal, add, update, remove, clear };
-  }, [items, add, update, remove, clear]);
+    return { ready, items, count, subtotal, add, update, remove, clear };
+  }, [ready, items, add, update, remove, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

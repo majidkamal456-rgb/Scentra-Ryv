@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Order, OrderItem, Product, ProductImage
+from .models import Order, OrderItem, Product, ProductImage, ProductReview
 from .shipping import calculate_shipping
 from .validators import validate_phone
 
@@ -14,6 +14,8 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     image_main = serializers.SerializerMethodField()
     in_stock = serializers.BooleanField(read_only=True)
+    average_rating = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -29,6 +31,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             'gender',
             'is_featured',
             'in_stock',
+            'average_rating',
+            'review_count',
         )
 
     def get_image_main(self, obj):
@@ -40,9 +44,47 @@ class ProductListSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(url)
         return url
 
+    def get_average_rating(self, obj):
+        return obj.average_rating
+
+    def get_review_count(self, obj):
+        return obj.review_count
+
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    video = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductReview
+        fields = (
+            'id',
+            'name',
+            'rating',
+            'comment',
+            'image',
+            'video',
+            'created_at',
+        )
+
+    def _abs(self, file_field):
+        if not file_field:
+            return None
+        request = self.context.get('request')
+        url = file_field.url
+        return request.build_absolute_uri(url) if request else url
+
+    def get_image(self, obj):
+        return self._abs(obj.image)
+
+    def get_video(self, obj):
+        return self._abs(obj.video)
+
 
 class ProductDetailSerializer(ProductListSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
+    reviews = serializers.SerializerMethodField()
+    rating_breakdown = serializers.SerializerMethodField()
 
     class Meta(ProductListSerializer.Meta):
         fields = ProductListSerializer.Meta.fields + (
@@ -51,7 +93,16 @@ class ProductDetailSerializer(ProductListSerializer):
             'heart_notes',
             'base_notes',
             'images',
+            'reviews',
+            'rating_breakdown',
         )
+
+    def get_reviews(self, obj):
+        qs = obj.approved_reviews.all()[:50]
+        return ProductReviewSerializer(qs, many=True, context=self.context).data
+
+    def get_rating_breakdown(self, obj):
+        return obj.rating_breakdown
 
 
 class CheckoutItemSerializer(serializers.Serializer):

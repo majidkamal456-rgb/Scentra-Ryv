@@ -3,21 +3,80 @@
 {% block title %}Buy {{ product.name }} Perfume Online in Pakistan | Scentra Ryv{% endblock %}
 {% block meta_description %}{{ product.name }} by Scentra Ryv — {{ product.short_description }} Order online with Cash on Delivery across Pakistan.{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Force compact Amazon-style reviews (overrides cache / preflight) */
+  #reviews .rating-bar {
+    display: grid !important;
+    grid-template-columns: 3.25rem minmax(4rem, 1fr) 2.25rem !important;
+    align-items: center !important;
+    column-gap: 0.5rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+  }
+  #reviews .rating-bar__label { white-space: nowrap; color: rgba(201,164,76,.9); }
+  #reviews .rating-bar__track {
+    height: 0.5rem !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(201,164,76,.2) !important;
+    background: rgba(10,10,10,.85) !important;
+  }
+  #reviews .rating-bar__fill {
+    display: block !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, rgba(201,164,76,.65), #c9a44c) !important;
+  }
+  #reviews .rating-bar__pct { text-align: right; font-variant-numeric: tabular-nums; color: #a8a295; }
+  #reviews .review-media-strip { display: flex; gap: 0.5rem; overflow-x: auto; }
+  #reviews .review-media-thumb {
+    position: relative !important;
+    display: block !important;
+    width: 56px !important;
+    height: 56px !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    border: 1px solid rgba(201,164,76,.25) !important;
+    background: #0a0a0a !important;
+    cursor: pointer;
+  }
+  #reviews .review-media-thumb img {
+    width: 56px !important;
+    height: 56px !important;
+    max-width: none !important;
+    object-fit: cover !important;
+  }
+  #reviews .review-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+  }
+  #reviews article video {
+    width: 96px !important;
+    height: 56px !important;
+    object-fit: cover !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="page-shell">
-  <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+  <div class="grid gap-6 lg:grid-cols-2 lg:gap-12">
+  <div class="flex items-start justify-center lg:justify-start">
     <div class="product-gallery fade-section visible">
       {% if product.images.exists or product.image_main %}
         <div class="swiper product-detail-swiper">
           <div class="swiper-wrapper">
             {% if product.image_main %}
               <div class="swiper-slide">
-                <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square h-full w-full object-cover object-center">
+                <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="product-gallery__img">
               </div>
             {% endif %}
             {% for img in product.images.all %}
               <div class="swiper-slide">
-                <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" class="aspect-square w-full object-cover">
+                <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" class="product-gallery__img">
               </div>
             {% endfor %}
           </div>
@@ -26,7 +85,7 @@
           <div class="swiper-pagination"></div>
         </div>
       {% else %}
-        <div class="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-charcoal via-brand-black to-brand-ink">
+        <div class="flex min-h-[12rem] min-w-[12rem] items-center justify-center bg-gradient-to-br from-brand-charcoal via-brand-black to-brand-ink px-10 py-12">
           <div class="text-center">
             <div class="mx-auto mb-6 h-48 w-28 rounded-t-full border border-brand-gold/40 bg-gradient-to-b from-brand-gold/30 to-transparent"></div>
             <span class="font-serif text-2xl text-brand-gold/60">{{ product.name }}</span>
@@ -34,14 +93,18 @@
         </div>
       {% endif %}
     </div>
+  </div>
 
     <div class="fade-section visible lg:py-4">
       <p class="section-eyebrow">{{ product.gender }}</p>
       <h1 class="mt-3 font-serif text-4xl text-brand-cream md:text-5xl">{{ product.name }}</h1>
+      <div class="mt-4">
+        {% include 'store/partials/star_rating.html' with rating=product.average_rating review_count=product.review_count show_value=True %}
+      </div>
       <p class="mt-4 text-base leading-relaxed text-brand-mute">{{ product.short_description }}</p>
       <p class="mt-6 font-serif text-3xl text-gradient-gold">Rs. {{ product.price|floatformat:0 }}</p>
 
-      <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-10 space-y-7" x-data="{ size: '{{ product.size_ml }}', qty: 1 }">
+      <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax="1" class="mt-10 space-y-7" x-data="{ size: '{{ product.size_ml }}', qty: 1 }">
         {% csrf_token %}
         <input type="hidden" name="product_id" value="{{ product.id }}">
 
@@ -102,6 +165,260 @@
     </div>
   </div>
 
+  <section id="reviews" class="fade-section mt-20 border-t border-brand-gold/10 pt-16 lg:mt-28 lg:pt-20"
+           x-data="{
+             showForm: {% if review_form.errors %}true{% else %}false{% endif %},
+             rating: {{ review_form.rating.value|default:5 }},
+             imageName: '',
+             videoName: '',
+             lightbox: null,
+             page: 1,
+             perPage: 5,
+             total: {{ reviews|length }},
+             get totalPages() {
+               return Math.max(1, Math.ceil(this.total / this.perPage));
+             },
+             showReview(index) {
+               const start = (this.page - 1) * this.perPage;
+               return index >= start && index < start + this.perPage;
+             },
+             goPage(p) {
+               const next = Math.min(this.totalPages, Math.max(1, p));
+               if (next === this.page) return;
+               this.page = next;
+               this.$nextTick(() => {
+                 document.getElementById('top-reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+               });
+             },
+             openLightbox(src) {
+               this.lightbox = src;
+               document.body.style.overflow = 'hidden';
+             },
+             closeLightbox() {
+               this.lightbox = null;
+               document.body.style.overflow = '';
+             },
+             init() {
+               const ratingEl = document.getElementById('review-rating-input');
+               if (ratingEl) ratingEl.value = this.rating;
+               document.getElementById('review-image-input')?.addEventListener('change', (e) => {
+                 this.imageName = e.target.files?.[0]?.name || '';
+               });
+               document.getElementById('review-video-input')?.addEventListener('change', (e) => {
+                 this.videoName = e.target.files?.[0]?.name || '';
+               });
+             }
+           }"
+           @keydown.escape.window="if (lightbox) closeLightbox()">
+    <div class="reviews-layout">
+      {# —— Left: summary + histogram + CTA —— #}
+      <aside class="reviews-aside">
+        <h2 class="font-serif text-xl text-brand-cream">Customer reviews</h2>
+
+        <div class="mt-3 flex flex-wrap items-center gap-1.5">
+          {% include 'store/partials/star_rating.html' with rating=product.average_rating compact=True %}
+          <span class="text-xs text-brand-cream/90">{{ product.average_rating|floatformat:1 }} out of 5</span>
+        </div>
+        <p class="mt-1 text-xs text-brand-mute">
+          {% if product.review_count %}
+            {{ product.review_count }} customer rating{{ product.review_count|pluralize }}
+          {% else %}
+            No ratings yet
+          {% endif %}
+        </p>
+
+        <ul class="mt-4 space-y-1.5" aria-label="Rating breakdown">
+          {% for row in product.rating_breakdown %}
+            <li class="rating-bar">
+              <span class="rating-bar__label">{{ row.stars }} star</span>
+              <div class="rating-bar__track" role="presentation">
+                <div class="rating-bar__fill" style="width: {{ row.percent }}%"></div>
+              </div>
+              <span class="rating-bar__pct">{{ row.percent }}%</span>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <div class="mt-6 border-t border-brand-gold/15 pt-5">
+          <h3 class="font-serif text-base text-brand-cream">Review this product</h3>
+          <p class="mt-1 text-xs text-brand-mute">Share your thoughts with other customers</p>
+          <button type="button" class="btn-gold mt-3 w-full !px-4 !py-2.5 text-[10px]" @click="showForm = !showForm; $nextTick(() => { if (showForm) document.getElementById('write-review')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); })">
+            <span x-text="showForm ? 'Hide review form' : 'Write a customer review'"></span>
+          </button>
+        </div>
+      </aside>
+
+      {# —— Right: top reviews —— #}
+      <div class="min-w-0" id="top-reviews">
+        <div class="reviews-list">
+        <h3 class="font-serif text-base text-brand-cream">Top reviews</h3>
+
+        <div class="mt-3 space-y-3">
+          {% for review in reviews %}
+            <article class="review-item" x-show="showReview({{ forloop.counter0 }})">
+              <div class="flex items-center gap-2">
+                <div class="review-avatar" aria-hidden="true">{{ review.name|slice:":1"|upper }}</div>
+                <p class="text-xs font-medium text-brand-cream">{{ review.name }}</p>
+              </div>
+              <div class="mt-1.5">
+                {% include 'store/partials/star_rating.html' with rating=review.rating compact=True %}
+              </div>
+              <p class="mt-1 text-[11px] text-brand-mute">Reviewed in Pakistan on {{ review.created_at|date:"F j, Y" }}</p>
+              <p class="mt-2 text-xs leading-relaxed text-brand-cream/80">{{ review.comment }}</p>
+              {% if review.image or review.video %}
+                <div class="mt-2.5 flex flex-wrap items-start gap-2">
+                  {% if review.image %}
+                    <button
+                      type="button"
+                      class="review-media-thumb"
+                      style="width:56px;height:56px"
+                      @click="openLightbox('{{ review.image.url|escapejs }}')"
+                      aria-label="View photo by {{ review.name }}"
+                    >
+                      <img src="{{ review.image.url }}" alt="Review by {{ review.name }}" loading="lazy" width="56" height="56" style="width:56px;height:56px;object-fit:cover">
+                    </button>
+                  {% endif %}
+                  {% if review.video %}
+                    <video controls width="96" height="56" style="width:96px;height:56px;object-fit:cover" class="border border-brand-gold/20 bg-brand-ink" preload="metadata">
+                      <source src="{{ review.video.url }}">
+                    </video>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </article>
+          {% empty %}
+            <div class="border border-dashed border-brand-gold/20 bg-brand-ink/30 px-4 py-8 text-center">
+              <p class="font-serif text-base text-brand-gold/80">No reviews yet</p>
+              <p class="mt-1 text-xs text-brand-mute">Be the first to share your experience with this fragrance.</p>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if reviews|length > 5 %}
+        <nav class="review-pagination" aria-label="Reviews pagination" x-show="totalPages > 1">
+          <button
+            type="button"
+            class="review-pagination__btn"
+            :disabled="page <= 1"
+            @click="goPage(page - 1)"
+            aria-label="Previous reviews page"
+          >
+            Prev
+          </button>
+          <template x-for="p in totalPages" :key="p">
+            <button
+              type="button"
+              class="review-pagination__btn"
+              :class="page === p ? 'is-active' : ''"
+              @click="goPage(p)"
+              :aria-current="page === p ? 'page' : null"
+              x-text="p"
+            ></button>
+          </template>
+          <button
+            type="button"
+            class="review-pagination__btn"
+            :disabled="page >= totalPages"
+            @click="goPage(page + 1)"
+            aria-label="Next reviews page"
+          >
+            Next
+          </button>
+          <p class="review-pagination__meta">
+            <span x-text="page"></span> / <span x-text="totalPages"></span>
+          </p>
+        </nav>
+        {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# —— Same-page review image lightbox —— #}
+    <div
+      x-show="lightbox"
+      x-cloak
+      x-transition.opacity
+      class="review-lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Review photo"
+      @click.self="closeLightbox()"
+    >
+      <button type="button" class="review-lightbox__close" @click="closeLightbox()" aria-label="Close photo">
+        &times;
+      </button>
+      <img :src="lightbox" alt="Review photo" class="review-lightbox__img">
+    </div>
+
+    {# —— Write review form (toggle) —— #}
+    <div id="write-review" class="review-panel mt-12" x-show="showForm" x-cloak x-transition>
+      <div class="mb-8">
+        <h3 class="font-serif text-2xl text-brand-gold sm:text-3xl">Write a Review</h3>
+        <p class="mt-3 max-w-lg text-sm leading-relaxed text-brand-mute">Share your thoughts — add a photo or short video of your unboxing or scent moment.</p>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" class="space-y-7">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="review">
+        {{ review_form.rating }}
+
+        <div>
+          <label class="form-label">Your rating *</label>
+          <div class="star-picker mt-2" role="radiogroup" aria-label="Rating">
+            <template x-for="n in [1,2,3,4,5]" :key="n">
+              <button type="button" class="star-picker__btn" :class="rating >= n ? 'is-active' : ''" @click="rating = n; document.getElementById('review-rating-input').value = n" :aria-label="n + ' stars'">★</button>
+            </template>
+          </div>
+          {% if review_form.rating.errors %}<p class="mt-2 text-sm text-red-300">{{ review_form.rating.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="form-label">Your Name *</label>
+          {{ review_form.name }}
+          {% if review_form.name.errors %}<p class="mt-2 text-sm text-red-300">{{ review_form.name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="form-label">Your Review *</label>
+          {{ review_form.comment }}
+          {% if review_form.comment.errors %}<p class="mt-2 text-sm text-red-300">{{ review_form.comment.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label class="form-label">Photo</label>
+            <label for="review-image-input" class="upload-zone mt-2" :class="imageName ? 'has-file' : ''">
+              <span class="upload-zone__icon">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </span>
+              <span class="text-sm text-brand-cream/80" x-text="imageName || 'Drop photo or browse'"></span>
+              <span class="text-[11px] text-brand-mute">JPG · PNG · WEBP · max 5MB</span>
+              {{ review_form.image }}
+            </label>
+            {% if review_form.image.errors %}<p class="mt-2 text-sm text-red-300">{{ review_form.image.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label">Video</label>
+            <label for="review-video-input" class="upload-zone mt-2" :class="videoName ? 'has-file' : ''">
+              <span class="upload-zone__icon">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </span>
+              <span class="text-sm text-brand-cream/80" x-text="videoName || 'Drop video or browse'"></span>
+              <span class="text-[11px] text-brand-mute">MP4 · WEBM · MOV · max 25MB</span>
+              {{ review_form.video }}
+            </label>
+            {% if review_form.video.errors %}<p class="mt-2 text-sm text-red-300">{{ review_form.video.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3 border-t border-brand-gold/10 pt-7 sm:flex-row sm:items-center">
+          <button type="submit" class="btn-gold-filled w-full sm:w-auto">Submit Review</button>
+          <p class="text-xs text-brand-mute">Reviews help other customers choose their signature scent.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+
   {% if related_products %}
   <section class="fade-section mt-20 border-t border-brand-gold/10 pt-16 lg:mt-28 lg:pt-20">
     <p class="section-eyebrow text-center">More to Love</p>
@@ -127,8 +444,12 @@
 <script>
   {% if product.images.exists or product.image_main %}
   new Swiper('.product-detail-swiper', {
-    loop: true,
+    loop: false,
+    slidesPerView: 1,
     speed: 700,
+    autoHeight: true,
+    observer: true,
+    observeParents: true,
     pagination: { el: '.product-detail-swiper .swiper-pagination', clickable: true },
     navigation: {
       nextEl: '.product-detail-swiper .swiper-button-next',
@@ -138,7 +459,7 @@
   {% endif %}
   new Swiper('.related-swiper', {
     slidesPerView: 1,
-    spaceBetween: 24,
+    spaceBetween: 16,
     speed: 600,
     navigation: {
       nextEl: '.related-swiper .swiper-button-next',

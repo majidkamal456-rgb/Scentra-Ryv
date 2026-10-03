@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Order, OrderItem, Product, ProductImage
+from .models import Order, OrderItem, Product, ProductImage, ProductReview
 
 
 class ProductImageInline(admin.TabularInline):
@@ -16,6 +16,51 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('name', 'short_description')
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline]
+
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ('product', 'name', 'rating', 'is_approved', 'has_media', 'created_at')
+    list_filter = ('rating', 'is_approved', 'created_at')
+    search_fields = ('name', 'comment', 'product__name')
+    list_editable = ('is_approved',)
+    readonly_fields = ('created_at', 'media_preview')
+
+    fieldsets = (
+        (None, {
+            'fields': ('product', 'name', 'rating', 'comment', 'is_approved', 'created_at'),
+        }),
+        ('Media', {
+            'fields': ('image', 'video', 'media_preview'),
+        }),
+    )
+
+    def has_media(self, obj):
+        return bool(obj.image or obj.video)
+
+    has_media.boolean = True
+    has_media.short_description = 'Media'
+
+    def media_preview(self, obj):
+        parts = []
+        if obj.image:
+            parts.append(
+                format_html(
+                    '<a href="{}" target="_blank"><img src="{}" style="max-height:120px;border-radius:6px;" /></a>',
+                    obj.image.url,
+                    obj.image.url,
+                )
+            )
+        if obj.video:
+            parts.append(
+                format_html(
+                    '<a href="{}" target="_blank">Video file</a>',
+                    obj.video.url,
+                )
+            )
+        return format_html('<br>'.join(['{}'] * len(parts)), *parts) if parts else '—'
+
+    media_preview.short_description = 'Preview'
 
 
 class OrderItemInline(admin.TabularInline):

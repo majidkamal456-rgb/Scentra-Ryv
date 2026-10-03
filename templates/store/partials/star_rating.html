@@ -1,0 +1,18 @@
+{% comment %}Expects: rating (number 0–5), optional review_count, optional show_value, optional compact{% endcomment %}
+{% with rating=rating|default:0 %}
+<div class="star-rating {% if compact %}star-rating--compact{% endif %}" aria-label="Rated {{ rating }} out of 5{% if review_count %} from {{ review_count }} reviews{% endif %}">
+  {% for i in "12345" %}
+    {% if rating >= forloop.counter %}
+      <span class="star-rating__star is-full" aria-hidden="true">★</span>
+    {% else %}
+      <span class="star-rating__star is-empty" aria-hidden="true">★</span>
+    {% endif %}
+  {% endfor %}
+  {% if show_value %}
+    <span class="star-rating__value">{{ rating|floatformat:1 }}</span>
+  {% endif %}
+  {% if review_count is not None %}
+    <span class="star-rating__count">({{ review_count }})</span>
+  {% endif %}
+</div>
+{% endwith %}

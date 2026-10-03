@@ -36,8 +36,8 @@
             {{ form.city }}
             {% if form.city.errors %}<p class="mt-1 text-sm text-red-300">{{ form.city.errors.0 }}</p>{% endif %}
             <p class="mt-2 text-xs leading-relaxed text-brand-mute">
-              Punjab: Rs. {{ nearby_shipping|floatformat:0 }}.
-              Sindh, Balochistan &amp; KPK: Rs. {{ other_shipping|floatformat:0 }}.
+              Punjab / Islamabad: Rs. {{ nearby_shipping|floatformat:0 }}.
+              Sindh, Balochistan, KPK &amp; Kashmir (any city, district or village): Rs. {{ other_shipping|floatformat:0 }}.
             </p>
           </div>
           <div class="sm:col-span-2">
@@ -192,11 +192,15 @@ function checkoutForm() {
     submitting: false,
     submitted: false,
     city: '{{ form.city.value|default:""|escapejs }}',
+    address: '{{ form.address.value|default:""|escapejs }}',
     phone: '{{ form.phone.value|default:""|escapejs }}',
     phoneError: '',
     subtotal: config.subtotal,
     itemCount: config.itemCount,
+    nearbyCities: config.nearbyCities || [],
+    nearbyProvinces: config.nearbyProvinces || [],
     remoteCities: config.remoteCities,
+    remoteProvinces: config.remoteProvinces || [],
     punjabRate: config.punjabRate,
     remoteRate: config.remoteRate,
 
@@ -205,16 +209,23 @@ function checkoutForm() {
         this.restoreDraft();
         const form = this.$el.querySelector('form');
         if (!form) return;
-        form.addEventListener('input', () => this.saveDraft());
+        form.addEventListener('input', () => {
+          const cityEl = form.querySelector('[name="city"]');
+          const addressEl = form.querySelector('[name="address"]');
+          if (cityEl) this.city = cityEl.value;
+          if (addressEl) this.address = addressEl.value;
+          this.saveDraft();
+        });
         form.addEventListener('change', () => this.saveDraft());
       });
       this.$watch('paymentMethod', () => this.saveDraft());
       this.$watch('phone', () => this.saveDraft());
       this.$watch('city', () => this.saveDraft());
+      this.$watch('address', () => this.saveDraft());
     },
 
     get shipping() {
-      return this.isRemoteCity(this.city) ? this.remoteRate : this.punjabRate;
+      return this.isRemoteCity(this.city, this.address) ? this.remoteRate : this.punjabRate;
     },
 
     get total() {
@@ -231,6 +242,7 @@ function checkoutForm() {
       });
       if (this.phone) data.phone = this.phone;
       if (this.city) data.city = this.city;
+      if (this.address) data.address = this.address;
       try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch (e) {}
     },
 
@@ -254,11 +266,14 @@ function checkoutForm() {
       }
       if (data.phone && (preferLocal || !this.phone)) this.phone = data.phone;
       if (data.city && (preferLocal || !this.city)) this.city = data.city;
+      if (data.address && (preferLocal || !this.address)) this.address = data.address;
 
       const phoneEl = form.querySelector('[name="phone"]');
       if (phoneEl && this.phone) phoneEl.value = this.phone;
       const cityEl = form.querySelector('[name="city"]');
       if (cityEl && this.city) cityEl.value = this.city;
+      const addressEl = form.querySelector('[name="address"]');
+      if (addressEl && this.address) addressEl.value = this.address;
     },
 
     limitPhone() {
@@ -282,13 +297,38 @@ function checkoutForm() {
       }
     },
 
-    isRemoteCity(city) {
-      const name = (city || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    keywordMatch(name, keywords) {
+      const tokens = name.split(' ');
+      return (keywords || []).some((keyword) => {
+        if (keyword.includes(' ')) return name.includes(keyword);
+        return tokens.includes(keyword);
+      });
+    },
+
+    placeMatch(name, places) {
+      if ((places || []).includes(name)) return true;
+      const tokens = name.split(' ');
+      if (tokens.some((token) => places.includes(token))) return true;
+      const compactName = name.replace(/\s+/g, '');
+      return (places || []).some((place) => {
+        if (place.includes(' ') && name.includes(place)) return true;
+        const compact = place.replace(/\s+/g, '');
+        return compact.length >= 5 && compactName.includes(compact);
+      });
+    },
+
+    isRemoteCity(city, address) {
+      const normalize = (value) => (value || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+      const name = [normalize(city), normalize(address)].filter(Boolean).join(' ');
       if (!name) return false;
-      if (this.remoteCities.includes(name)) return true;
-      const first = name.split(' ')[0];
-      if (this.remoteCities.includes(first)) return true;
-      return this.remoteCities.some((remote) => remote.includes(' ') && name.includes(remote));
+
+      // Punjab / ICT → nearby (250)
+      if (this.keywordMatch(name, this.nearbyProvinces) || this.placeMatch(name, this.nearbyCities)) {
+        return false;
+      }
+
+      // Known remote province/city OR any unknown village → remote (280)
+      return true;
     },
 
     formatRs(n) {

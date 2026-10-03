@@ -2,8 +2,13 @@ import re
 
 from django import forms
 
-from .models import Order
-from .validators import validate_payment_screenshot, validate_phone
+from .models import Order, ProductReview
+from .validators import (
+    validate_payment_screenshot,
+    validate_phone,
+    validate_review_image,
+    validate_review_video,
+)
 
 
 class CheckoutForm(forms.ModelForm):
@@ -56,10 +61,11 @@ class CheckoutForm(forms.ModelForm):
                 'class': 'form-input',
                 'rows': 3,
                 'placeholder': 'House no, street, area',
+                'x-model': 'address',
             }),
             'city': forms.TextInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'City',
+                'placeholder': 'City / district',
                 'x-model': 'city',
                 'autocomplete': 'address-level2',
             }),
@@ -167,3 +173,40 @@ class ReturnRequestForm(forms.Form):
             phone = '0' + phone[2:]
         validate_phone(phone)
         return phone
+
+
+class ProductReviewForm(forms.ModelForm):
+    class Meta:
+        model = ProductReview
+        fields = ('name', 'rating', 'comment', 'image', 'video')
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Your name',
+            }),
+            'rating': forms.HiddenInput(attrs={'id': 'review-rating-input'}),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-input min-h-[8rem]',
+                'rows': 5,
+                'placeholder': 'Share your experience with this fragrance…',
+            }),
+            'image': forms.ClearableFileInput(attrs={
+                'class': 'sr-only',
+                'accept': 'image/jpeg,image/png,image/webp',
+                'id': 'review-image-input',
+            }),
+            'video': forms.ClearableFileInput(attrs={
+                'class': 'sr-only',
+                'accept': 'video/mp4,video/webm,video/quicktime',
+                'id': 'review-video-input',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['rating'].choices = ProductReview.RATING_CHOICES
+        self.fields['rating'].initial = 5
+        self.fields['image'].required = False
+        self.fields['video'].required = False
+        self.fields['image'].validators.append(validate_review_image)
+        self.fields['video'].validators.append(validate_review_video)

@@ -73,8 +73,8 @@ Copy `.env.example` to `.env` and configure:
 | `POSTGRES_*` | Database connection |
 | `BANK_NAME`, `BANK_ACCOUNT_TITLE`, `BANK_ACCOUNT_NUMBER`, `BANK_IBAN` | Bank transfer details shown at checkout |
 | `WHATSAPP_NUMBER` | WhatsApp contact (country code, no +) |
-| `SHIPPING_NEARBY_RATE` | Punjab / default shipping (default: 280) |
-| `SHIPPING_OTHER_RATE` | Sindh, Balochistan & KPK shipping (default: 350) |
+| `SHIPPING_NEARBY_RATE` | Punjab / Islamabad shipping (default: 250) |
+| `SHIPPING_OTHER_RATE` | Sindh, Balochistan, KPK & Kashmir shipping (default: 280) |
 
 ## Logo
 

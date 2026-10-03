@@ -1,26 +1,36 @@
 {% load static %}
-<div class="grid gap-8 md:grid-cols-2">
-  <div class="overflow-hidden border border-brand-gold/10 bg-brand-ink">
+<div class="quick-view">
+  <div class="quick-view__media">
     {% if product.image_main %}
-      <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="aspect-square w-full object-cover">
+      <img src="{{ product.image_main.url }}" alt="{{ product.name }}" class="quick-view__img">
     {% else %}
-      <div class="flex aspect-square items-center justify-center bg-gradient-to-br from-brand-charcoal to-brand-black">
-        <div class="h-40 w-24 rounded-t-full border border-brand-gold/40 bg-gradient-to-b from-brand-gold/30 to-transparent"></div>
+      <div class="flex h-full min-h-[16rem] w-full flex-col items-center justify-center bg-gradient-to-br from-brand-charcoal to-brand-black">
+        <div class="mb-4 h-32 w-20 rounded-t-full border border-brand-gold/40 bg-gradient-to-b from-brand-gold/30 to-transparent"></div>
+        <span class="font-serif text-xl text-brand-gold/55">{{ product.name }}</span>
       </div>
     {% endif %}
   </div>
-  <div class="flex flex-col justify-center">
+
+  <div class="quick-view__body">
     <p class="section-eyebrow">{{ product.gender }}</p>
-    <h2 class="mt-2 font-serif text-3xl text-brand-cream">{{ product.name }}</h2>
+    <h2 class="mt-2 font-serif text-3xl text-brand-cream md:text-4xl">{{ product.name }}</h2>
     <p class="mt-3 text-sm leading-relaxed text-brand-mute">{{ product.short_description }}</p>
-    <p class="mt-5 font-serif text-2xl text-gradient-gold">Rs. {{ product.price|floatformat:0 }}</p>
+
+    <div class="mt-4">
+      {% include 'store/partials/star_rating.html' with rating=product.average_rating review_count=product.review_count show_value=True %}
+    </div>
+
+    <p class="mt-5 font-serif text-3xl text-gradient-gold">Rs. {{ product.price|floatformat:0 }}</p>
     <p class="mt-1 text-sm text-brand-mute">{{ product.size_ml }}</p>
-    <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax class="mt-8">
+
+    <form method="post" action="{% url 'store:cart_add' %}" data-cart-add data-ajax="1" class="mt-8">
       {% csrf_token %}
       <input type="hidden" name="product_id" value="{{ product.id }}">
       <input type="hidden" name="quantity" value="1">
       <input type="hidden" name="size" value="{{ product.size_ml }}">
-      <button type="submit" class="btn-gold-filled w-full">Add to Cart</button>
+      <button type="submit" class="btn-gold-filled w-full" {% if not product.in_stock %}disabled{% endif %}>
+        {% if product.in_stock %}Add to Cart{% else %}Sold Out{% endif %}
+      </button>
     </form>
     <a href="{{ product.get_absolute_url }}" class="btn-ghost mt-4 block text-center">View full details</a>
   </div>

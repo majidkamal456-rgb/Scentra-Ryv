@@ -6,6 +6,7 @@ from .cart import Cart
 def cart_context(request):
     cart = Cart(request)
     return {
+        'cart': cart,
         'cart_count': len(cart),
         'cart_subtotal': cart.get_subtotal(),
         'whatsapp_number': getattr(settings, 'WHATSAPP_NUMBER', '923177478167'),

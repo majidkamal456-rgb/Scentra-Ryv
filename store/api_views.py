@@ -14,9 +14,17 @@ from .api_serializers import (
     ProductListSerializer,
 )
 from .emails import send_order_notification, send_return_request_notification
-from .forms import ReturnRequestForm
-from .models import Order, OrderItem, Product
-from .shipping import calculate_shipping
+from .forms import ProductReviewForm, ReturnRequestForm
+from .models import Order, OrderItem, Product, annotate_product_ratings
+from .shipping import (
+    NEARBY_CITIES,
+    NEARBY_CITY_LABELS,
+    NEARBY_PROVINCE_KEYWORDS,
+    REMOTE_CITIES,
+    REMOTE_CITY_LABELS,
+    REMOTE_PROVINCE_KEYWORDS,
+    calculate_shipping,
+)
 
 
 def _absolute_media(request, path):
@@ -27,7 +35,7 @@ def _absolute_media(request, path):
 
 @api_view(['GET'])
 def product_list(request):
-    qs = Product.objects.all()
+    qs = annotate_product_ratings(Product.objects.all())
     gender = request.query_params.get('gender', '')
     featured = request.query_params.get('featured', '')
     sort = request.query_params.get('sort', 'name')
@@ -50,10 +58,10 @@ def product_list(request):
 
 @api_view(['GET'])
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug)
+    product = get_object_or_404(annotate_product_ratings(Product.objects.all()), slug=slug)
     serializer = ProductDetailSerializer(product, context={'request': request})
     data = serializer.data
-    related = Product.objects.exclude(pk=product.pk)[:6]
+    related = annotate_product_ratings(Product.objects.exclude(pk=product.pk))[:6]
     data['related'] = ProductListSerializer(
         related, many=True, context={'request': request}
     ).data
@@ -68,14 +76,26 @@ def site_config(request):
         'shipping_nearby_rate': str(settings.SHIPPING_NEARBY_RATE),
         'shipping_other_rate': str(settings.SHIPPING_OTHER_RATE),
         'bank_details': getattr(settings, 'BANK_DETAILS', {}),
+        'nearby_cities': sorted(NEARBY_CITIES),
+        'nearby_provinces': sorted(NEARBY_PROVINCE_KEYWORDS),
+        'remote_cities': sorted(REMOTE_CITIES),
+        'remote_provinces': sorted(REMOTE_PROVINCE_KEYWORDS),
+        'remote_city_labels': list(REMOTE_CITY_LABELS),
+        'nearby_city_labels': list(NEARBY_CITY_LABELS),
     })
 
 
 @api_view(['POST'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
 def checkout_create(request):
-    payload = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
-    # FormData from Next.js may send items as a JSON string
+    # Build a plain dict (not a QueryDict) so nested `items` validates correctly
+    # for both JSON bodies and multipart FormData from the Next.js frontend.
+    if hasattr(request.data, 'getlist'):
+        payload = {key: request.data.get(key) for key in request.data.keys()}
+    else:
+        payload = dict(request.data)
+
+    # FormData from Next.js sends items as a JSON string
     items = payload.get('items')
     if isinstance(items, str):
         import json
@@ -91,6 +111,7 @@ def checkout_create(request):
     data = serializer.validated_data
     payment_method = data['payment_method']
     city = data['city']
+    address = data.get('address') or ''
     items_data = data['items']
 
     product_ids = [item['product_id'] for item in items_data]
@@ -119,7 +140,7 @@ def checkout_create(request):
         total_qty += qty
         line_items.append((product, qty, size))
 
-    shipping = calculate_shipping(total_qty, city)
+    shipping = calculate_shipping(total_qty, city, address=address)
     total = subtotal + shipping
 
     screenshot = request.FILES.get('payment_screenshot')
@@ -194,7 +215,9 @@ def order_detail(request, order_number):
         'city': order.city,
         'address': order.address,
         'payment_method': order.payment_method,
+        'payment_method_display': order.get_payment_method_display(),
         'status': order.status,
+        'status_display': order.get_status_display(),
         'subtotal': str(order.subtotal),
         'shipping': str(order.shipping),
         'total_amount': str(order.total_amount),
@@ -226,3 +249,24 @@ def return_request(request):
         'success': True,
         'message': 'Your return request has been received. Our team will contact you within 1–2 business days.',
     })
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+def product_review_create(request, slug):
+    product = get_object_or_404(Product, slug=slug)
+    form = ProductReviewForm(request.data, request.FILES)
+    if not form.is_valid():
+        return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    review = form.save(commit=False)
+    review.product = product
+    review.save()
+
+    return Response({
+        'success': True,
+        'message': 'Thank you! Your review has been submitted.',
+        'id': review.id,
+        'average_rating': product.average_rating,
+        'review_count': product.review_count,
+    }, status=status.HTTP_201_CREATED)

@@ -2,8 +2,122 @@ from decimal import Decimal
 
 from django.conf import settings
 
-# Sindh, Balochistan, Khyber Pakhtunkhwa — Rs. 350.
-# All other cities (Punjab & rest) — Rs. 280.
+# Nearby zone — Rs. 250
+NEARBY_PROVINCE_KEYWORDS = {
+    'punjab',
+    'panjab',
+}
+
+# Remote zone — Rs. 280
+REMOTE_PROVINCE_KEYWORDS = {
+    'sindh',
+    'balochistan',
+    'baluchistan',
+    'kpk',
+    'kp',
+    'khyber',
+    'pakhtunkhwa',
+    'khyber pakhtunkhwa',
+    # Kashmir / northern areas
+    'kashmir',
+    'azad kashmir',
+    'ajk',
+    'muzaffarabad',
+    'gilgit',
+    'baltistan',
+    'gilgit baltistan',
+    'gb',
+}
+
+# Punjab + ICT cities/districts — Rs. 250
+NEARBY_CITIES = {
+    'lahore',
+    'faisalabad',
+    'rawalpindi',
+    'islamabad',
+    'isb',
+    'multan',
+    'gujranwala',
+    'sialkot',
+    'bahawalpur',
+    'sargodha',
+    'sahiwal',
+    'sheikhupura',
+    'rahim yar khan',
+    'rahimyarkhan',
+    'gujrat',
+    'jhelum',
+    'kasur',
+    'okara',
+    'vehari',
+    'khanewal',
+    'muzaffargarh',
+    'dera ghazi khan',
+    'dg khan',
+    'd g khan',
+    'bahawalnagar',
+    'chinjot',
+    'chiniot',
+    'jhang',
+    'toba tek singh',
+    'tt singh',
+    'hafizabad',
+    'nankana sahib',
+    'nankana',
+    'narowal',
+    'mandi bahauddin',
+    'mandi bahaudin',
+    'mianwali',
+    'bhakkar',
+    'khushab',
+    'chakwal',
+    'attock',
+    'taxila',
+    'wah',
+    'wah cantt',
+    'kamoke',
+    'wazirabad',
+    'muridke',
+    'pakpattan',
+    'lodhran',
+    'layyah',
+    'rajanpur',
+    'kot addu',
+    'gojra',
+    'samundri',
+    'burewala',
+    'hasilpur',
+    'ahmadpur east',
+    'arifwala',
+    'chichawatni',
+    'daska',
+    'pasrur',
+    'sambrial',
+    'gujar khan',
+    'murree',
+    'pind dadan khan',
+    'talagang',
+    'pindi gheb',
+    'jand',
+    'kallar kahar',
+    'choa saidan shah',
+    'fort abbas',
+    'yazman',
+    'jalalpur',
+    'kamalia',
+    'pir mahal',
+    'shorkot',
+    'kabirwala',
+    'mailsi',
+    'jahania',
+    'duniyapur',
+    'karor',
+    'taunsa',
+    'jampur',
+    'kot chutta',
+}
+
+# Sindh, Balochistan, KPK, Kashmir cities / districts — Rs. 280
 REMOTE_CITIES = {
     # Sindh
     'karachi',
@@ -25,11 +139,32 @@ REMOTE_CITIES = {
     'jamshoro',
     'tando allahyar',
     'tando adam',
+    'tando muhammad khan',
+    'tando soomro',
     'umar kot',
     'umarkot',
+    'umerkot',
     'ghotki',
     'kashmore',
-    # Balochistan
+    'tharparkar',
+    'mithi',
+    'sanghar',
+    'matiari',
+    'sujawal',
+    'naushahro feroze',
+    'naushero feroze',
+    'qambar',
+    'shahdadkot',
+    'qambar shahdadkot',
+    'hala',
+    'kotri',
+    'mirpur bathoro',
+    'kandhkot',
+    'rohri',
+    'mehar',
+    'moro',
+    'sakrand',
+    # Balochistan (districts + towns)
     'quetta',
     'gwadar',
     'turbat',
@@ -43,6 +178,61 @@ REMOTE_CITIES = {
     'panjgur',
     'lasbela',
     'loralai',
+    'dera bugti',
+    'nushki',
+    'kalat',
+    'mastung',
+    'pishin',
+    'killa abdullah',
+    'qilla abdullah',
+    'killa saifullah',
+    'qilla saifullah',
+    'zhob',
+    'sherani',
+    'musakhel',
+    'barkhan',
+    'kohlu',
+    'sibi',
+    'ziarat',
+    'harnai',
+    'kachhi',
+    'bolan',
+    'jhal magsi',
+    'jafarabad',
+    'jaffarabad',
+    'sohbatpur',
+    'nasirabad',
+    'kachhi',
+    'kharan',
+    'washuk',
+    'awab',
+    'awaran',
+    'ketch',
+    'kech',
+    'gwadar',
+    'lasbela',
+    'hub chowki',
+    'uthal',
+    'bella',
+    'winder',
+    'dalbandin',
+    'taftan',
+    'muslim bagh',
+    'qila saifullah',
+    'dukki',
+    'sana',
+    'surab',
+    'khudabadan',
+    'dhadar',
+    'mach',
+    'bhag',
+    'dera murad jamali',
+    'd m jamali',
+    'ustao muhammad',
+    'usta muhammad',
+    'gandawa',
+    'jhat pat',
+    'dera allah yar',
     # Khyber Pakhtunkhwa
     'peshawar',
     'mardan',
@@ -62,6 +252,88 @@ REMOTE_CITIES = {
     'timergara',
     'dir',
     'chitral',
+    'battagram',
+    'lakki marwat',
+    'hangu',
+    'karak',
+    'tank',
+    'buner',
+    'shangla',
+    'torghar',
+    'kolai palas',
+    'upper dir',
+    'lower dir',
+    'malakand',
+    'bajour',
+    'bajaur',
+    'mohmand',
+    'khyber',
+    'kurram',
+    'orakzai',
+    'north waziristan',
+    'south waziristan',
+    'waziristan',
+    'parachinar',
+    'landi kotal',
+    'jamrud',
+    'batkhela',
+    'chakdara',
+    'alpuri',
+    'besham',
+    'dassu',
+    'kohistan',
+    'upper kohistan',
+    'lower kohistan',
+    'hungu',
+    # Azad Kashmir (AJK)
+    'muzaffarabad',
+    'mirpur',
+    'kotli',
+    'rawalakot',
+    'bagh',
+    'bhimber',
+    'pallandri',
+    'pallandari',
+    'haveli',
+    'neelum',
+    'athmuqam',
+    'hatian',
+    'hattian',
+    'sudhanoti',
+    'sudhnoti',
+    'forward kahuta',
+    'kahuta ajk',
+    'sehnsa',
+    'dadyal',
+    'chakswari',
+    'islamgarh',
+    'new mirpur',
+    'mangla',
+    'ajk',
+    'azad kashmir',
+    'azad jammu',
+    'azad jammu kashmir',
+    # Gilgit-Baltistan
+    'gilgit',
+    'skardu',
+    'hunza',
+    'nagar',
+    'ghizer',
+    'ghanche',
+    'kharmang',
+    'shigar',
+    'astore',
+    'diamir',
+    'chilas',
+    'gulmit',
+    'karimabad',
+    'aliabad',
+    'passu',
+    'khaplu',
+    'gamba',
+    'rondue',
+    'baltistan',
+    'gilgit baltistan',
 }
 
 REMOTE_CITY_LABELS = (
@@ -69,14 +341,14 @@ REMOTE_CITY_LABELS = (
     'Hyderabad',
     'Sukkur',
     'Quetta',
+    'Gwadar',
     'Peshawar',
-    'Mardan',
-    'Abbottabad',
-    'Swat',
+    'Muzaffarabad',
+    'Mirpur',
+    'Gilgit',
+    'Skardu',
 )
 
-# Kept for older imports / templates that still reference the old name.
-NEARBY_CITIES = set()  # unused — Punjab is the default rate
 NEARBY_CITY_LABELS = (
     'Lahore',
     'Faisalabad',
@@ -95,43 +367,89 @@ def _normalize_city(city):
     return ' '.join(cleaned.split())
 
 
-def is_remote_city(city):
-    """True for Sindh / Balochistan / KPK cities (Rs. 350)."""
-    name = _normalize_city(city)
-    if not name:
-        return False
-    if name in REMOTE_CITIES:
-        return True
-    first = name.split()[0]
-    if first in REMOTE_CITIES:
-        return True
-    for remote in REMOTE_CITIES:
-        if ' ' in remote and remote in name:
+def _combined_location_text(city, address=None):
+    parts = [_normalize_city(city)]
+    if address:
+        parts.append(_normalize_city(address))
+    return ' '.join(p for p in parts if p).strip()
+
+
+def _keyword_match(name, keywords):
+    tokens = name.split()
+    for keyword in keywords:
+        if ' ' in keyword:
+            if keyword in name:
+                return True
+        elif keyword in tokens:
             return True
     return False
 
 
-def is_nearby_city(city):
-    """Legacy helper: Punjab / default zone (not remote)."""
-    if not _normalize_city(city):
+def _place_match(name, places):
+    if name in places:
+        return True
+    tokens = name.split()
+    if any(token in places for token in tokens):
+        return True
+    compact_name = name.replace(' ', '')
+    for place in places:
+        if ' ' in place and place in name:
+            return True
+        compact = place.replace(' ', '')
+        if len(compact) >= 5 and compact in compact_name:
+            return True
+    return False
+
+
+def is_nearby_city(city, address=None):
+    """True for Punjab / ICT (Rs. 250)."""
+    name = _combined_location_text(city, address)
+    if not name:
         return False
-    return not is_remote_city(city)
+    if _keyword_match(name, NEARBY_PROVINCE_KEYWORDS):
+        return True
+    return _place_match(name, NEARBY_CITIES)
 
 
-def calculate_shipping(quantity, city=None):
+def is_remote_city(city, address=None):
     """
-    Punjab & other non-remote cities: Rs. 280.
-    Sindh / Balochistan / KPK: Rs. 350.
+    True for Sindh / Balochistan / KPK / Kashmir (Rs. 280).
+
+    Unknown villages default to remote so Balochistan/Kashmir settlements
+    are not undercharged as Punjab.
+    """
+    name = _combined_location_text(city, address)
+    if not name:
+        return False
+
+    # Explicit Punjab / ICT → nearby
+    if is_nearby_city(city, address):
+        return False
+
+    # Explicit remote province / city
+    if _keyword_match(name, REMOTE_PROVINCE_KEYWORDS):
+        return True
+    if _place_match(name, REMOTE_CITIES):
+        return True
+
+    # Unknown place name → remote rate (safer for villages outside Punjab)
+    return True
+
+
+def calculate_shipping(quantity, city=None, address=None):
+    """
+    Punjab / ICT: Rs. 250.
+    Sindh / Balochistan / KPK / Kashmir (and unknown villages): Rs. 280.
     No per-extra-item fee.
     """
     quantity = int(quantity or 0)
     if quantity <= 0:
         return Decimal('0.00')
 
-    punjab_rate = getattr(settings, 'SHIPPING_NEARBY_RATE', Decimal('280.00'))
-    remote_rate = getattr(settings, 'SHIPPING_OTHER_RATE', Decimal('350.00'))
+    punjab_rate = getattr(settings, 'SHIPPING_NEARBY_RATE', Decimal('250.00'))
+    remote_rate = getattr(settings, 'SHIPPING_OTHER_RATE', Decimal('280.00'))
 
-    base = remote_rate if is_remote_city(city) else punjab_rate
+    base = remote_rate if is_remote_city(city, address) else punjab_rate
     return Decimal(base)
 
 
