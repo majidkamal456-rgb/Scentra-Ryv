@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cinzel, Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { fetchConfigSafe } from "@/lib/api";
 import { CartProvider } from "@/lib/cart";
 import { ToastProvider } from "@/lib/toast";
@@ -78,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Header />
             <main className="relative z-10 flex-1">{children}</main>
             <Footer contactEmail={config.contact_email} />
+            <WhatsAppFloat whatsappNumber={config.whatsapp_number} />
           </CartProvider>
         </ToastProvider>
       </body>

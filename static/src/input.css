@@ -582,6 +582,31 @@
   .review-pagination__meta {
     @apply ml-1 w-full text-center text-[11px] tracking-[0.18em] text-brand-mute sm:ml-2 sm:w-auto;
   }
+
+  /* Floating WhatsApp support button */
+  .whatsapp-float {
+    @apply fixed bottom-5 right-5 z-[85] inline-flex items-center gap-2 rounded-full
+      bg-[#25D366] px-4 py-3 text-white shadow-lift
+      transition duration-300 hover:scale-105 hover:brightness-110;
+  }
+
+  .whatsapp-float__icon {
+    @apply h-6 w-6 shrink-0;
+  }
+
+  .whatsapp-float__label {
+    @apply pr-1 text-[11px] font-medium uppercase tracking-[0.18em];
+  }
+
+  @media (max-width: 640px) {
+    .whatsapp-float__label {
+      @apply sr-only;
+    }
+
+    .whatsapp-float {
+      @apply h-14 w-14 justify-center px-0 py-0;
+    }
+  }
 }
 
 [x-cloak] {

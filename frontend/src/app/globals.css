@@ -603,6 +603,29 @@ select.form-input option {
   @apply ml-1 w-full text-center text-[11px] tracking-[0.18em] text-brand-mute sm:ml-2 sm:w-auto;
 }
 
+.whatsapp-float {
+  @apply fixed bottom-5 right-5 z-[85] inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-white transition duration-300 hover:scale-105 hover:brightness-110;
+  box-shadow: var(--shadow-lift);
+}
+
+.whatsapp-float__icon {
+  @apply h-6 w-6 shrink-0;
+}
+
+.whatsapp-float__label {
+  @apply pr-1 text-[11px] font-medium uppercase tracking-[0.18em];
+}
+
+@media (max-width: 640px) {
+  .whatsapp-float__label {
+    @apply sr-only;
+  }
+
+  .whatsapp-float {
+    @apply h-14 w-14 justify-center px-0 py-0;
+  }
+}
+
 /* —— Atmosphere noise —— */
 .site-noise {
   pointer-events: none;
