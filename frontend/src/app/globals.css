@@ -604,25 +604,63 @@ select.form-input option {
 }
 
 .whatsapp-float {
-  @apply fixed bottom-5 right-5 z-[85] inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-white transition duration-300 hover:scale-105 hover:brightness-110;
-  box-shadow: var(--shadow-lift);
+  position: fixed !important;
+  right: 1.25rem !important;
+  bottom: 1.25rem !important;
+  z-index: 85 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  max-width: 12rem !important;
+  max-height: 3.5rem !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 9999px !important;
+  background: #25d366 !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.3s ease, filter 0.3s ease !important;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
 .whatsapp-float__icon {
-  @apply h-6 w-6 shrink-0;
+  width: 24px !important;
+  height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  flex-shrink: 0 !important;
+  display: block !important;
 }
 
 .whatsapp-float__label {
-  @apply pr-1 text-[11px] font-medium uppercase tracking-[0.18em];
+  padding-right: 0.25rem;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {
-  .whatsapp-float__label {
-    @apply sr-only;
+  .whatsapp-float {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    max-width: 3.5rem !important;
+    max-height: 3.5rem !important;
+    padding: 0 !important;
+    justify-content: center !important;
   }
 
-  .whatsapp-float {
-    @apply h-14 w-14 justify-center px-0 py-0;
+  .whatsapp-float__label {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
   }
 }
 
