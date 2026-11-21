@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/cart/page": "/cart",
+  "/checkout/page": "/checkout",
+  "/order/[orderNumber]/page": "/order/[orderNumber]",
+  "/page": "/",
+  "/shop/page": "/shop",
+  "/about/page": "/about",
+  "/contact/page": "/contact",
+  "/returns/page": "/returns",
+  "/product/[slug]/page": "/product/[slug]",
+  "/shipping-policy/page": "/shipping-policy"
+}
