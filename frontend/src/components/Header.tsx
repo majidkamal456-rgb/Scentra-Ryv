@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CartDrawer } from "@/components/CartDrawer";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useCart } from "@/store/cart";
 
 const NAV = [
@@ -70,7 +69,6 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <ThemeToggle />
             <button
               id="cart-trigger"
               type="button"

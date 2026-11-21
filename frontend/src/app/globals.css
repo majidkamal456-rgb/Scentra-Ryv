@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
-@custom-variant light (&:where(.light, .light *));
 
 @theme inline {
   --color-bg: var(--bg);
@@ -24,16 +23,6 @@
   --muted: #a89a7e;
   --surface: #0c0c0c;
   --border: rgba(201, 162, 74, 0.22);
-}
-
-.light {
-  --bg: #faf6ec;
-  --fg: #1a1408;
-  --gold: #a07a22;
-  --gold-soft: #7a5a16;
-  --muted: #6b5c45;
-  --surface: #fffdf7;
-  --border: rgba(160, 122, 34, 0.28);
 }
 
 html {
@@ -491,10 +480,6 @@ body {
 
 .dark .site-noise {
   opacity: 0.045;
-}
-
-.light .site-noise {
-  opacity: 0.03;
 }
 
 @keyframes cart-bump {

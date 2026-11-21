@@ -3,7 +3,6 @@ import { Cinzel, Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -64,23 +63,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`dark scroll-smooth ${cinzel.variable} ${cormorant.variable} ${dmSans.variable}`}
+      data-theme="dark"
       suppressHydrationWarning
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('scentra_theme');if(t==='light'||t==='dark'){document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(t);document.documentElement.dataset.theme=t;}}catch(e){}})();`,
+            __html: `(function(){try{localStorage.removeItem('scentra_theme');document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');document.documentElement.dataset.theme='dark';}catch(e){}})();`,
           }}
         />
       </head>
       <body className="relative flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)] antialiased">
-        <ThemeProvider>
-          <div className="site-noise" aria-hidden="true" />
-          <Header />
-          <main className="relative z-10 flex-1">{children}</main>
-          <Footer />
-          <WhatsAppFloat />
-        </ThemeProvider>
+        <div className="site-noise" aria-hidden="true" />
+        <Header />
+        <main className="relative z-10 flex-1">{children}</main>
+        <Footer />
+        <WhatsAppFloat />
       </body>
     </html>
   );
