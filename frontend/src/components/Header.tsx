@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CartDrawer } from "@/components/CartDrawer";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useCart } from "@/store/cart";
 
 const NAV = [
@@ -26,6 +27,13 @@ export function Header() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   return (
     <>
@@ -61,7 +69,8 @@ export function Header() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <ThemeToggle />
             <button
               id="cart-trigger"
               type="button"
@@ -78,7 +87,7 @@ export function Header() {
                 />
               </svg>
               {mounted && count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c9a44c] px-1 text-[10px] font-semibold text-black">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-semibold text-black">
                   {count}
                 </span>
               )}
@@ -105,13 +114,13 @@ export function Header() {
         onClick={() => setMobileOpen(false)}
       />
       <aside
-        className={`fixed right-0 top-0 z-[75] flex h-full w-[min(20rem,88vw)] flex-col border-l border-[rgba(201,164,76,0.2)] bg-[rgba(7,7,7,0.95)] p-8 backdrop-blur-xl transition-transform duration-500 md:hidden ${
+        className={`mobile-drawer fixed right-0 top-0 z-[75] flex h-full w-[min(20rem,88vw)] flex-col border-l border-[var(--border)] p-8 backdrop-blur-xl transition-transform duration-500 md:hidden ${
           mobileOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <button
           type="button"
-          className="mb-10 self-end text-[rgba(243,238,226,0.5)] transition hover:text-[#c9a44c]"
+          className="mb-10 self-end text-[var(--muted)] transition hover:text-[var(--gold)]"
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
         >
@@ -119,15 +128,15 @@ export function Header() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <nav className="flex flex-col">
+        <nav className="flex flex-col gap-5">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`border-b border-[rgba(201,164,76,0.18)] py-4 text-sm uppercase tracking-[0.2em] transition hover:text-[#c9a44c] ${
+              className={`font-serif text-3xl transition hover:tracking-wide ${
                 pathname === item.href
-                  ? "text-[#c9a44c]"
-                  : "text-[rgba(243,238,226,0.8)]"
+                  ? "text-[var(--gold)]"
+                  : "text-[var(--fg)]/85 hover:text-[var(--gold)]"
               }`}
               onClick={() => setMobileOpen(false)}
             >
@@ -135,6 +144,16 @@ export function Header() {
             </Link>
           ))}
         </nav>
+        <button
+          type="button"
+          className="btn-gold mt-auto w-full text-center"
+          onClick={() => {
+            setMobileOpen(false);
+            setDrawerOpen(true);
+          }}
+        >
+          View Cart
+        </button>
       </aside>
 
       <CartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />

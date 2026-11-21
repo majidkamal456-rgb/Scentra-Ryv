@@ -10,7 +10,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] text-[var(--fg)] transition hover:border-[var(--gold)] hover:text-[var(--gold)]"
+      className="cart-trigger"
     >
       {!ready ? (
         <span className="h-4 w-4" />

@@ -54,6 +54,8 @@ class ProductListSerializer(serializers.ModelSerializer):
 class ProductReviewSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     video = serializers.SerializerMethodField()
+    product_slug = serializers.CharField(source='product.slug', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
 
     class Meta:
         model = ProductReview
@@ -65,6 +67,8 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             'image',
             'video',
             'created_at',
+            'product_slug',
+            'product_name',
         )
 
     def _abs(self, file_field):

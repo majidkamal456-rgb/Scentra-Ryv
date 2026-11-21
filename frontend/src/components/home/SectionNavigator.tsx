@@ -12,7 +12,7 @@ const SECTIONS = [
   { id: "delivery", label: "Delivery" },
 ] as const;
 
-const IDLE_MS = 3000;
+const IDLE_MS = 4000;
 
 export function SectionNavigator() {
   const [active, setActive] = useState(0);
@@ -87,7 +87,6 @@ export function SectionNavigator() {
     };
 
     updateSection();
-    // start 7s countdown immediately on load
     startIdleTimer();
 
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -108,7 +107,8 @@ export function SectionNavigator() {
 
   const remaining = SECTIONS.slice(active + 1);
   const next = remaining[0];
-  const visible = !atEnd && !idleHidden && Boolean(next);
+  // Never overlay the hero — only show after user leaves the intro section
+  const visible = active > 0 && !atEnd && !idleHidden && Boolean(next);
 
   function goTo(id: string) {
     bumpActivity();
@@ -124,7 +124,7 @@ export function SectionNavigator() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.96 }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-none fixed inset-x-0 bottom-28 z-40 flex justify-center px-4 md:bottom-7"
+          className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 md:bottom-8"
         >
           <button
             type="button"

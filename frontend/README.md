@@ -30,6 +30,7 @@ Open [http://localhost:3000](http://localhost:3000).
 |--------|------|---------|
 | GET | `/api/store/products/` | Product list |
 | GET | `/api/store/products/<slug>/` | Product detail |
+| GET | `/api/store/reviews/` | Approved reviews (home + cards) |
 | GET | `/api/store/config/` | WhatsApp, shipping, bank |
 | POST | `/api/store/checkout/` | Place order |
 | GET | `/api/store/orders/<order_number>/` | Order confirmation |

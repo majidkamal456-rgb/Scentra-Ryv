@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getHomeReviews, type Review } from "@/data/reviews";
+import { fetchReviews, getHomeReviews, type Review } from "@/data/reviews";
 
 function ReviewCard({ review }: { review: Review }) {
   return (
@@ -13,11 +13,15 @@ function ReviewCard({ review }: { review: Review }) {
       <p className="text-sm leading-relaxed text-[var(--muted)]">
         &ldquo;{review.comment}&rdquo;
       </p>
-      <p className="mt-3 text-[10px] tracking-[0.16em] text-[var(--gold)]/70 uppercase">
-        on {review.productName}
-      </p>
+      {review.productName ? (
+        <p className="mt-3 text-[10px] tracking-[0.16em] text-[var(--gold)]/70 uppercase">
+          on {review.productName}
+        </p>
+      ) : null}
       <p className="font-serif mt-3 text-lg">{review.name}</p>
-      <p className="text-xs tracking-wider text-[var(--gold)] uppercase">{review.city}</p>
+      {review.city ? (
+        <p className="text-xs tracking-wider text-[var(--gold)] uppercase">{review.city}</p>
+      ) : null}
     </article>
   );
 }
@@ -36,12 +40,22 @@ function ArrowIcon({ dir }: { dir: "left" | "right" }) {
 }
 
 export function Testimonials() {
-  const reviews = getHomeReviews();
+  const [reviews, setReviews] = useState<Review[]>(() => getHomeReviews());
   const trackRef = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
   const [active, setActive] = useState(0);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReviews().then((list) => {
+      if (!cancelled) setReviews(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updateNav = useCallback(() => {
     const el = trackRef.current;
@@ -76,7 +90,7 @@ export function Testimonials() {
       el.removeEventListener("scroll", updateNav);
       window.removeEventListener("resize", updateNav);
     };
-  }, [updateNav]);
+  }, [updateNav, reviews]);
 
   function scrollByCard(dir: -1 | 1) {
     const el = trackRef.current;
@@ -126,17 +140,17 @@ export function Testimonials() {
     }
   }
 
+  if (reviews.length === 0) return null;
+
   return (
     <section className="relative z-10 overflow-hidden py-20">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="text-[11px] tracking-[0.28em] text-[var(--gold)] uppercase">
-          Customer reviews
-        </p>
-        <h2 className="font-serif mt-2 text-3xl md:text-5xl">Loved across Pakistan</h2>
+        <p className="text-[11px] tracking-[0.28em] text-[var(--gold)] uppercase">Voices</p>
+        <h2 className="font-serif mt-2 text-3xl md:text-5xl">What Our Clients Say</h2>
+        <div className="gold-rule mt-4 max-w-xs" />
       </div>
 
       <div className="relative mt-10">
-        {/* Left blur + scroll icon */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 md:w-24">
           <div
             className="absolute inset-0 backdrop-blur-[2px]"
@@ -158,7 +172,6 @@ export function Testimonials() {
           </button>
         </div>
 
-        {/* Right blur + scroll icon */}
         <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 md:w-24">
           <div
             className="absolute inset-0 backdrop-blur-[2px]"

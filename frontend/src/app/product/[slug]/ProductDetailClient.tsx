@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   formatPrice,
   genderLabel,
@@ -10,7 +10,7 @@ import {
   type Product,
 } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
-import { getReviewsForProduct } from "@/data/reviews";
+import { fetchReviews, getReviewsForProduct, type Review } from "@/data/reviews";
 import { flyToCart } from "@/lib/flyToCart";
 import { useCart } from "@/store/cart";
 
@@ -19,7 +19,19 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const imgRef = useRef<HTMLDivElement>(null);
   const related = products.filter((p) => p.id !== product.id).slice(0, 3);
-  const productReviews = getReviewsForProduct(product.slug);
+  const [productReviews, setProductReviews] = useState<Review[]>(() =>
+    getReviewsForProduct(product.slug),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReviews(product.slug).then((list) => {
+      if (!cancelled) setProductReviews(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [product.slug]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 pt-28 pb-20 lg:px-8">

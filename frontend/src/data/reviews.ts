@@ -1,3 +1,5 @@
+import { apiGet } from "@/lib/api";
+
 /** Site reviews — shared by home testimonials slider + product pages. */
 export type Review = {
   id: string;
@@ -7,9 +9,22 @@ export type Review = {
   city: string;
   rating: number;
   comment: string;
+  image?: string | null;
 };
 
-export const reviews: Review[] = [
+type ApiReview = {
+  id: number | string;
+  name: string;
+  rating: number;
+  comment: string;
+  image?: string | null;
+  product_slug?: string;
+  product_name?: string;
+  created_at?: string;
+};
+
+/** Fallback only when API is unreachable (local offline). */
+export const FALLBACK_REVIEWS: Review[] = [
   {
     id: "r1",
     productSlug: "eloura",
@@ -40,82 +55,64 @@ export const reviews: Review[] = [
     comment:
       "Crush On You is bright and addictive. Delivered to Islamabad in two days. Will gift these for Eid.",
   },
-  {
-    id: "r4",
-    productSlug: "al-fakhama",
-    productName: "AL-FAKHAMA",
-    name: "Fatima Z.",
-    city: "Multan",
-    rating: 5,
-    comment:
-      "AL-FAKHAMA is rich and long-lasting. Unisex but I wear it confidently. Customer support on WhatsApp was quick.",
-  },
-  {
-    id: "r5",
-    productSlug: "prime-ryv",
-    productName: "Prime Ryv",
-    name: "Bilal A.",
-    city: "Faisalabad",
-    rating: 5,
-    comment:
-      "Prime Ryv gets compliments every time. Ordered Tazkiah next — Scentra Ryv is my go-to for fragrance now.",
-  },
-  {
-    id: "r6",
-    productSlug: "tazkiah",
-    productName: "Tazkiah",
-    name: "Omar S.",
-    city: "Rawalpindi",
-    rating: 5,
-    comment:
-      "Tazkiah has serious presence — oud and saffron done right. Lasts well in the heat.",
-  },
-  {
-    id: "r7",
-    productSlug: "eloura",
-    productName: "Eloura",
-    name: "Maryam N.",
-    city: "Peshawar",
-    rating: 5,
-    comment:
-      "Received so many compliments on Eloura. Soft gardenia that feels expensive.",
-  },
-  {
-    id: "r8",
-    productSlug: "amition-x",
-    productName: "Amition X",
-    name: "Usman R.",
-    city: "Hyderabad",
-    rating: 4,
-    comment:
-      "Very close to Dunhill Desire vibe. Bottle looks premium for the price.",
-  },
-  {
-    id: "r9",
-    productSlug: "crush-on-you",
-    productName: "Crush On You",
-    name: "Hina F.",
-    city: "Sialkot",
-    rating: 5,
-    comment:
-      "My new favourite. Fresh, flirty, and the COD experience was smooth.",
-  },
-  {
-    id: "r10",
-    productSlug: "al-fakhama",
-    productName: "AL-FAKHAMA",
-    name: "Zain A.",
-    city: "Quetta",
-    rating: 5,
-    comment:
-      "Smoky oud with a juicy opening — unique in my collection. Will reorder.",
-  },
 ];
 
+function mapApiReview(r: ApiReview): Review {
+  return {
+    id: String(r.id),
+    productSlug: r.product_slug ?? "",
+    productName: r.product_name ?? "",
+    name: r.name,
+    city: "",
+    rating: Number(r.rating) || 5,
+    comment: r.comment,
+    image: r.image ?? null,
+  };
+}
+
+let cache: Review[] | null = null;
+let inflight: Promise<Review[]> | null = null;
+
+export async function fetchReviews(productSlug?: string): Promise<Review[]> {
+  if (!productSlug && cache) return cache;
+
+  const run = async () => {
+    try {
+      const path = productSlug
+        ? `/reviews/?product=${encodeURIComponent(productSlug)}`
+        : "/reviews/";
+      const data = await apiGet<ApiReview[]>(path);
+      const mapped = (Array.isArray(data) ? data : []).map(mapApiReview);
+      if (!productSlug) cache = mapped;
+      return mapped.length > 0 ? mapped : FALLBACK_REVIEWS;
+    } catch {
+      return productSlug
+        ? FALLBACK_REVIEWS.filter((r) => r.productSlug === productSlug)
+        : FALLBACK_REVIEWS;
+    }
+  };
+
+  if (!productSlug) {
+    if (!inflight) inflight = run().finally(() => {
+      inflight = null;
+    });
+    return inflight;
+  }
+  return run();
+}
+
 export function getReviewsForProduct(slug: string) {
-  return reviews.filter((r) => r.productSlug === slug);
+  const source = cache ?? FALLBACK_REVIEWS;
+  return source.filter((r) => r.productSlug === slug);
 }
 
 export function getHomeReviews() {
-  return reviews;
+  return cache ?? FALLBACK_REVIEWS;
+}
+
+export function reviewStatsForProduct(slug: string) {
+  const list = getReviewsForProduct(slug);
+  const count = list.length;
+  const avg = count === 0 ? 0 : list.reduce((s, r) => s + r.rating, 0) / count;
+  return { count, avg };
 }

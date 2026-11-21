@@ -12,10 +12,11 @@ from .api_serializers import (
     CheckoutSerializer,
     ProductDetailSerializer,
     ProductListSerializer,
+    ProductReviewSerializer,
 )
 from .emails import send_order_notification, send_return_request_notification
 from .forms import ProductReviewForm, ReturnRequestForm
-from .models import Order, OrderItem, Product, annotate_product_ratings
+from .models import Order, OrderItem, Product, ProductReview, annotate_product_ratings
 from .shipping import (
     NEARBY_CITIES,
     NEARBY_CITY_LABELS,
@@ -66,6 +67,21 @@ def product_detail(request, slug):
         related, many=True, context={'request': request}
     ).data
     return Response(data)
+
+
+@api_view(['GET'])
+def review_list(request):
+    """Approved reviews for home testimonials + product cards."""
+    qs = (
+        ProductReview.objects.filter(is_approved=True)
+        .select_related('product')
+        .order_by('-created_at')[:60]
+    )
+    slug = request.query_params.get('product', '').strip()
+    if slug:
+        qs = qs.filter(product__slug=slug)
+    serializer = ProductReviewSerializer(qs, many=True, context={'request': request})
+    return Response(serializer.data)
 
 
 @api_view(['GET'])

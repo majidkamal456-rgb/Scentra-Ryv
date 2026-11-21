@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatPrice, genderLabel, type Product } from "@/data/products";
-import { getReviewsForProduct } from "@/data/reviews";
+import { fetchReviews, getReviewsForProduct } from "@/data/reviews";
 import { flyToCart } from "@/lib/flyToCart";
 import { useCart } from "@/store/cart";
 
@@ -16,7 +16,18 @@ export function ProductCard({ product }: Props) {
   const add = useCart((s) => s.add);
   const imgWrapRef = useRef<HTMLAnchorElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const productReviews = getReviewsForProduct(product.slug);
+  const [productReviews, setProductReviews] = useState(() => getReviewsForProduct(product.slug));
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReviews().then(() => {
+      if (!cancelled) setProductReviews(getReviewsForProduct(product.slug));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [product.slug]);
+
   const reviewCount = productReviews.length;
   const avg =
     reviewCount === 0
