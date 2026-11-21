@@ -55,7 +55,13 @@ export async function fetchReviews(productSlug?: string): Promise<Review[]> {
   try {
     return await run();
   } catch {
-    return [];
+    // Fallback: load all reviews and filter client-side
+    try {
+      const all = await fetchReviews();
+      return all.filter((r) => r.productSlug === productSlug);
+    } catch {
+      return [];
+    }
   }
 }
 

@@ -72,14 +72,11 @@ def product_detail(request, slug):
 @api_view(['GET'])
 def review_list(request):
     """Approved reviews for home testimonials + product cards."""
-    qs = (
-        ProductReview.objects.filter(is_approved=True)
-        .select_related('product')
-        .order_by('-created_at')[:60]
-    )
+    qs = ProductReview.objects.filter(is_approved=True).select_related('product')
     slug = request.query_params.get('product', '').strip()
     if slug:
         qs = qs.filter(product__slug=slug)
+    qs = qs.order_by('-created_at')[:60]
     serializer = ProductReviewSerializer(qs, many=True, context={'request': request})
     return Response(serializer.data)
 
