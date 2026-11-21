@@ -1,13 +1,13 @@
 {
   "/_not-found/page": "/_not-found",
-  "/cart/page": "/cart",
   "/checkout/page": "/checkout",
+  "/cart/page": "/cart",
+  "/page": "/",
   "/order/[orderNumber]/page": "/order/[orderNumber]",
   "/shop/page": "/shop",
-  "/page": "/",
-  "/about/page": "/about",
-  "/product/[slug]/page": "/product/[slug]",
-  "/contact/page": "/contact",
   "/returns/page": "/returns",
-  "/shipping-policy/page": "/shipping-policy"
+  "/about/page": "/about",
+  "/contact/page": "/contact",
+  "/shipping-policy/page": "/shipping-policy",
+  "/product/[slug]/page": "/product/[slug]"
 }

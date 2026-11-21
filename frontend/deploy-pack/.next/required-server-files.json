@@ -60,7 +60,28 @@
       "dangerouslyAllowSVG": false,
       "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
       "contentDispositionType": "attachment",
-      "remotePatterns": [],
+      "remotePatterns": [
+        {
+          "protocol": "https",
+          "hostname": "scentraryv.pk",
+          "pathname": "/media/**"
+        },
+        {
+          "protocol": "https",
+          "hostname": "www.scentraryv.pk",
+          "pathname": "/media/**"
+        },
+        {
+          "protocol": "http",
+          "hostname": "localhost",
+          "pathname": "/media/**"
+        },
+        {
+          "protocol": "http",
+          "hostname": "127.0.0.1",
+          "pathname": "/media/**"
+        }
+      ],
       "unoptimized": false
     },
     "devIndicators": {
