@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchReviews, getHomeReviews, type Review } from "@/data/reviews";
 
@@ -13,6 +14,18 @@ function ReviewCard({ review }: { review: Review }) {
       <p className="text-sm leading-relaxed text-[var(--muted)]">
         &ldquo;{review.comment}&rdquo;
       </p>
+      {review.image ? (
+        <div className="relative mt-4 aspect-[4/3] overflow-hidden border border-[var(--border)]">
+          <Image
+            src={review.image}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="352px"
+            unoptimized
+          />
+        </div>
+      ) : null}
       {review.productName ? (
         <p className="mt-3 text-[10px] tracking-[0.16em] text-[var(--gold)]/70 uppercase">
           on {review.productName}

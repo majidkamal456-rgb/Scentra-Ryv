@@ -68,9 +68,27 @@ export type ApiReview = {
   rating: number;
   comment: string;
   image?: string | null;
+  video?: string | null;
   product_slug?: string;
   product_name?: string;
   created_at?: string;
+};
+
+export type ApiProductImage = {
+  id: number;
+  image: string;
+  alt_text?: string;
+  order?: number;
+};
+
+export type ApiProductDetail = ApiProduct & {
+  description?: string;
+  top_notes?: string;
+  heart_notes?: string;
+  base_notes?: string;
+  images?: ApiProductImage[];
+  reviews?: ApiReview[];
+  rating_breakdown?: Array<{ stars: number; count: number; percent: number }>;
 };
 
 export type CheckoutResponse = {
@@ -112,6 +130,10 @@ export function fetchApiReviews(productSlug?: string) {
     ? `/reviews/?product=${encodeURIComponent(productSlug)}`
     : "/reviews/";
   return apiGet<ApiReview[]>(path);
+}
+
+export function fetchApiProductDetail(slug: string) {
+  return apiGet<ApiProductDetail>(`/products/${encodeURIComponent(slug)}/`);
 }
 
 export function fetchApiOrder(orderNumber: string) {

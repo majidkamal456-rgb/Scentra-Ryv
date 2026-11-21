@@ -1,4 +1,5 @@
 import { fetchApiReviews, type ApiReview } from "@/lib/api";
+import { mediaUrl } from "@/lib/media";
 
 /** Site reviews — from Django admin / DB only (no fake hardcoded list). */
 export type Review = {
@@ -10,6 +11,7 @@ export type Review = {
   rating: number;
   comment: string;
   image?: string | null;
+  video?: string | null;
 };
 
 function mapApiReview(r: ApiReview): Review {
@@ -21,7 +23,8 @@ function mapApiReview(r: ApiReview): Review {
     city: "",
     rating: Number(r.rating) || 5,
     comment: r.comment,
-    image: r.image ?? null,
+    image: mediaUrl(r.image),
+    video: mediaUrl(r.video),
   };
 }
 
