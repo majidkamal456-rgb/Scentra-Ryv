@@ -1,68 +1,54 @@
-import Link from "next/link";
+"use client";
+
+import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import { fetchProducts, type Product } from "@/lib/api";
-import { SortSelect } from "./SortSelect";
+import { products, type Gender } from "@/data/products";
 
-export const metadata = {
-  title: "Scentra Ryv | Shop",
-  description: "Luxury perfumes by Scentra Ryv. Premium fragrances with cash on delivery nationwide.",
-};
-
-type Props = { searchParams: Promise<{ gender?: string; sort?: string }> };
-
-const GENDERS = [
-  { key: "", label: "All" },
-  { key: "unisex", label: "Unisex" },
-  { key: "men", label: "Men" },
-  { key: "women", label: "Women" },
+const FILTERS: { id: "all" | Gender; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "men", label: "Men" },
+  { id: "women", label: "Women" },
+  { id: "unisex", label: "Unisex" },
 ];
 
-export default async function ShopPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const gender = ["men", "women", "unisex"].includes(params.gender || "") ? (params.gender as string) : "";
-  const sort = ["name", "price_asc", "price_desc"].includes(params.sort || "") ? (params.sort as string) : "name";
+export default function ShopPage() {
+  const [filter, setFilter] = useState<"all" | Gender>("all");
 
-  let products: Product[] = [];
-  try {
-    products = await fetchProducts({ gender: gender || undefined, sort });
-  } catch {
-    products = [];
-  }
+  const list = useMemo(
+    () => (filter === "all" ? products : products.filter((p) => p.gender === filter)),
+    [filter],
+  );
 
   return (
-    <section className="page-shell">
-      <div className="page-hero fade-section visible">
-        <p className="section-eyebrow">Boutique</p>
-        <h1 className="section-heading mt-3">Shop All Fragrances</h1>
-        <div className="gold-divider" />
-        <p className="text-brand-mute">Discover your signature scent from our luxury collection</p>
+    <div className="mx-auto max-w-7xl px-4 pt-28 pb-20 lg:px-8">
+      <p className="text-[11px] tracking-[0.28em] text-[var(--gold)] uppercase">Shop</p>
+      <h1 className="font-serif mt-2 text-4xl md:text-6xl">The collection</h1>
+      <p className="mt-3 max-w-lg text-[var(--muted)]">
+        Six signatures — filter by gender and find your next everyday luxury.
+      </p>
+
+      <div className="mt-8 flex flex-wrap gap-2">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={`px-4 py-2 text-[11px] tracking-[0.16em] uppercase transition ${
+              filter === f.id
+                ? "bg-[var(--gold)] text-black"
+                : "border border-[var(--border)] text-[var(--muted)] hover:border-[var(--gold)] hover:text-[var(--gold)]"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
-      <div className="fade-section visible mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-brand-gold/10 pb-6">
-        <div className="flex flex-wrap gap-2">
-          {GENDERS.map((g) => {
-            const sp = new URLSearchParams();
-            if (g.key) sp.set("gender", g.key);
-            if (g.key && sort !== "name") sp.set("sort", sort);
-            const q = sp.toString();
-            return (
-              <Link key={g.key || "all"} href={`/shop${q ? `?${q}` : ""}`} className={`chip ${gender === g.key ? "chip-active" : ""}`}>
-                {g.label}
-              </Link>
-            );
-          })}
-        </div>
-        <SortSelect gender={gender} sort={sort} />
-      </div>
-
-      <div className="stagger-children grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-        {products.map((p) => (
+      <div className="mt-12 grid grid-cols-1 gap-y-10 sm:grid-cols-2 sm:gap-x-4 md:grid-cols-3 md:gap-x-8">
+        {list.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
-        {products.length === 0 && (
-          <p className="col-span-full py-20 text-center text-brand-mute">No products found.</p>
-        )}
       </div>
-    </section>
+    </div>
   );
 }

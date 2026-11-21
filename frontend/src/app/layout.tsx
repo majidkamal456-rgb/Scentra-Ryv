@@ -3,9 +3,7 @@ import { Cinzel, Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { fetchConfigSafe } from "@/lib/api";
-import { CartProvider } from "@/lib/cart";
-import { ToastProvider } from "@/lib/toast";
+import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -23,17 +21,18 @@ const cormorant = Cormorant_Garamond({
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-dm",
+  variable: "--font-dm-sans",
   weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
   title: {
     default: "Scentra Ryv | Essence & Elixir",
-    template: "%s",
+    template: "%s · Scentra Ryv",
   },
   description:
-    "Luxury perfumes by Scentra Ryv — Essence & Elixir. Premium fragrances with cash on delivery nationwide.",
+    "Luxury perfumes by Scentra Ryv — Essence & Elixir. Premium fragrances with cash on delivery nationwide across Pakistan.",
   metadataBase: new URL("https://www.scentraryv.pk"),
   icons: {
     icon: [
@@ -51,37 +50,37 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.scentraryv.pk/static/images/scentra-ryv-og-banner.jpg",
+        url: "/images/scentra-ryv-og-banner.jpg",
         width: 1200,
         height: 630,
         alt: "Scentra Ryv — Essence & Elixir",
-        type: "image/jpeg",
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Scentra Ryv — Essence & Elixir",
-    description: "Premium perfumes with Cash on Delivery across Pakistan.",
-    images: ["https://www.scentraryv.pk/static/images/scentra-ryv-og-banner.jpg"],
-  },
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const config = await fetchConfigSafe();
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${cinzel.variable} ${cormorant.variable} ${dmSans.variable} relative flex min-h-screen flex-col`}>
-        <div className="site-noise" aria-hidden="true" />
-        <ToastProvider>
-          <CartProvider>
-            <Header />
-            <main className="relative z-10 flex-1">{children}</main>
-            <Footer contactEmail={config.contact_email} />
-            <WhatsAppFloat whatsappNumber={config.whatsapp_number} />
-          </CartProvider>
-        </ToastProvider>
+    <html
+      lang="en"
+      className={`dark scroll-smooth ${cinzel.variable} ${cormorant.variable} ${dmSans.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('scentra_theme');if(t==='light'||t==='dark'){document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(t);document.documentElement.dataset.theme=t;}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="relative flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)] antialiased">
+        <ThemeProvider>
+          <div className="site-noise" aria-hidden="true" />
+          <Header />
+          <main className="relative z-10 flex-1">{children}</main>
+          <Footer />
+          <WhatsAppFloat />
+        </ThemeProvider>
       </body>
     </html>
   );
