@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatPrice, genderLabel, type Product } from "@/data/products";
-import { fetchReviews, getReviewsForProduct } from "@/data/reviews";
+import { fetchProductMeta } from "@/data/productMeta";
 import { flyToCart } from "@/lib/flyToCart";
 import { useCart } from "@/store/cart";
 
@@ -16,23 +16,23 @@ export function ProductCard({ product }: Props) {
   const add = useCart((s) => s.add);
   const imgWrapRef = useRef<HTMLAnchorElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const [productReviews, setProductReviews] = useState(() => getReviewsForProduct(product.slug));
+  const [avg, setAvg] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetchReviews().then(() => {
-      if (!cancelled) setProductReviews(getReviewsForProduct(product.slug));
+    fetchProductMeta().then((meta) => {
+      if (cancelled) return;
+      const m = meta[product.slug];
+      if (m) {
+        setAvg(m.averageRating);
+        setReviewCount(m.reviewCount);
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [product.slug]);
-
-  const reviewCount = productReviews.length;
-  const avg =
-    reviewCount === 0
-      ? 0
-      : productReviews.reduce((s, r) => s + r.rating, 0) / reviewCount;
 
   function handleBuy() {
     flyToCart(imgWrapRef.current ?? btnRef.current, product.image);
@@ -67,12 +67,18 @@ export function ProductCard({ product }: Props) {
         </Link>
 
         <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--muted)]">
-          <span className="text-[var(--gold)]" aria-label={`${avg.toFixed(1)} stars`}>
-            {"★".repeat(Math.round(avg) || 5)}
-          </span>
-          <span>
-            {reviewCount > 0 ? `${avg.toFixed(1)} · ${reviewCount} reviews` : "No reviews yet"}
-          </span>
+          {reviewCount > 0 ? (
+            <>
+              <span className="text-[var(--gold)]" aria-label={`${avg.toFixed(1)} stars`}>
+                {"★".repeat(Math.min(5, Math.round(avg)))}
+              </span>
+              <span>
+                {avg.toFixed(1)} · {reviewCount} reviews
+              </span>
+            </>
+          ) : (
+            <span>No reviews yet</span>
+          )}
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-2">

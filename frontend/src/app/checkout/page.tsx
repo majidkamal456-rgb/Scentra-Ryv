@@ -1,47 +1,70 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { fetchProductMeta } from "@/data/productMeta";
 import { formatPrice } from "@/data/products";
+import { apiPostJson, type CheckoutResponse } from "@/lib/api";
 import { useCart, useCartHydrated } from "@/store/cart";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const hydrated = useCartHydrated();
   const items = useCart((s) => s.items);
   const subtotal = useCart((s) => s.subtotal);
   const clear = useCart((s) => s.clear);
-  const [done, setDone] = useState(false);
-  const [orderId, setOrderId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const safeItems = hydrated ? items : [];
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const id = `SR-${Date.now().toString(36).toUpperCase()}`;
-    setOrderId(id);
-    clear();
-    setDone(true);
+    setError("");
+    setSubmitting(true);
+
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const paymentRaw = String(fd.get("payment") || "cod");
+    const payment_method = paymentRaw === "bank" ? "bank_transfer" : "cod";
+
+    try {
+      const meta = await fetchProductMeta();
+      const apiItems = safeItems.map((item) => {
+        const dbId = meta[item.slug]?.dbId ?? Number(item.productId);
+        if (!dbId || Number.isNaN(dbId)) {
+          throw new Error(`Product not found in store: ${item.name}`);
+        }
+        return {
+          product_id: dbId,
+          quantity: item.quantity,
+          size: item.sizeMl,
+        };
+      });
+
+      const res = await apiPostJson<CheckoutResponse>("/checkout/", {
+        full_name: String(fd.get("name") || "").trim(),
+        phone: String(fd.get("phone") || "").trim(),
+        city: String(fd.get("city") || "").trim(),
+        address: String(fd.get("address") || "").trim(),
+        email: String(fd.get("email") || "").trim(),
+        notes: String(fd.get("notes") || "").trim(),
+        payment_method,
+        items: apiItems,
+      });
+
+      clear();
+      router.push(`/order/${encodeURIComponent(res.order_number)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not place order. Try again.");
+      setSubmitting(false);
+    }
   }
 
   if (!hydrated) {
     return (
       <div className="mx-auto max-w-lg px-4 pt-28 pb-20 text-center">
         <p className="text-[var(--muted)]">Loading checkout…</p>
-      </div>
-    );
-  }
-
-  if (done) {
-    return (
-      <div className="mx-auto max-w-lg px-4 pt-28 pb-20 text-center">
-        <p className="text-[11px] tracking-[0.28em] text-[var(--gold)] uppercase">Thank you</p>
-        <h1 className="font-serif mt-2 text-4xl">Order received</h1>
-        <p className="mt-4 text-[var(--muted)]">
-          Your order <span className="text-[var(--gold)]">{orderId}</span> is confirmed. We&apos;ll
-          contact you on WhatsApp to arrange Cash on Delivery.
-        </p>
-        <Link href="/shop" className="btn-gold mt-8 inline-flex">
-          Continue shopping
-        </Link>
       </div>
     );
   }
@@ -69,11 +92,18 @@ export default function CheckoutPage() {
           <Field label="Full name" name="name" required />
           <Field label="Phone" name="phone" type="tel" required placeholder="03XXXXXXXXX" />
           <Field label="City" name="city" required />
+          <Field label="Email (optional)" name="email" type="email" />
           <label className="block">
             <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
               Address
             </span>
             <textarea name="address" required rows={3} className="input-field resize-none" />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
+              Notes (optional)
+            </span>
+            <textarea name="notes" rows={2} className="input-field resize-none" />
           </label>
           <fieldset className="border border-[var(--border)] p-4">
             <legend className="px-2 text-[11px] tracking-[0.16em] text-[var(--gold)] uppercase">
@@ -88,8 +118,9 @@ export default function CheckoutPage() {
               Bank transfer
             </label>
           </fieldset>
-          <button type="submit" className="btn-gold w-full">
-            Place order
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          <button type="submit" className="btn-gold w-full" disabled={submitting}>
+            {submitting ? "Placing order…" : "Place order"}
           </button>
         </form>
       </div>

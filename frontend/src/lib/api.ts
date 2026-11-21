@@ -24,3 +24,96 @@ export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return res.json() as Promise<T>;
 }
+
+export async function apiPostJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(apiUrl(path), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      typeof data === "object" && data
+        ? Object.values(data as Record<string, unknown>)
+            .flat()
+            .map(String)
+            .join(" ")
+        : `API ${path} failed: ${res.status}`;
+    throw new Error(msg || `API ${path} failed: ${res.status}`);
+  }
+  return data as T;
+}
+
+export type ApiProduct = {
+  id: number;
+  name: string;
+  slug: string;
+  short_description?: string;
+  price: string | number;
+  size_ml?: string;
+  image_main?: string | null;
+  gender?: string;
+  average_rating?: number | null;
+  review_count?: number;
+};
+
+export type ApiReview = {
+  id: number | string;
+  name: string;
+  rating: number;
+  comment: string;
+  image?: string | null;
+  product_slug?: string;
+  product_name?: string;
+  created_at?: string;
+};
+
+export type CheckoutResponse = {
+  order_number: string;
+  total_amount: string;
+  shipping: string;
+  subtotal: string;
+  status: string;
+  payment_method: string;
+};
+
+export type ApiOrder = {
+  order_number: string;
+  full_name: string;
+  phone: string;
+  city: string;
+  address: string;
+  payment_method: string;
+  status: string;
+  subtotal: string;
+  shipping: string;
+  total_amount: string;
+  created_at?: string;
+  items: Array<{
+    product_name: string;
+    size_ml: string;
+    quantity: number;
+    price_at_purchase: string;
+    line_total: string;
+  }>;
+};
+
+export function fetchApiProducts() {
+  return apiGet<ApiProduct[]>("/products/");
+}
+
+export function fetchApiReviews(productSlug?: string) {
+  const path = productSlug
+    ? `/reviews/?product=${encodeURIComponent(productSlug)}`
+    : "/reviews/";
+  return apiGet<ApiReview[]>(path);
+}
+
+export function fetchApiOrder(orderNumber: string) {
+  return apiGet<ApiOrder>(`/orders/${encodeURIComponent(orderNumber)}/`);
+}

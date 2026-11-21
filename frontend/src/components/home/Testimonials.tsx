@@ -140,8 +140,6 @@ export function Testimonials() {
     }
   }
 
-  if (reviews.length === 0) return null;
-
   return (
     <section className="relative z-10 overflow-hidden py-20">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
@@ -150,6 +148,14 @@ export function Testimonials() {
         <div className="gold-rule mt-4 max-w-xs" />
       </div>
 
+      {reviews.length === 0 ? (
+        <p className="mx-auto mt-10 max-w-xl px-4 text-center text-sm text-[var(--muted)]">
+          Be the first to share your experience — reviews appear here after approval.
+        </p>
+      ) : null}
+
+      {reviews.length > 0 ? (
+        <>
       <div className="relative mt-10">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 md:w-24">
           <div
@@ -224,6 +230,8 @@ export function Testimonials() {
           />
         ))}
       </div>
+        </>
+      ) : null}
     </section>
   );
 }
