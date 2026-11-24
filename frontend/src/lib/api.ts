@@ -25,6 +25,18 @@ export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+function formatApiError(data: unknown, status: number, path: string): string {
+  if (typeof data === "object" && data) {
+    const joined = Object.values(data as Record<string, unknown>)
+      .flat()
+      .map(String)
+      .join(" ")
+      .trim();
+    if (joined) return joined;
+  }
+  return `API ${path} failed: ${status}`;
+}
+
 export async function apiPostJson<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(apiUrl(path), {
     method: "POST",
@@ -36,16 +48,20 @@ export async function apiPostJson<T>(path: string, body: unknown): Promise<T> {
     cache: "no-store",
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg =
-      typeof data === "object" && data
-        ? Object.values(data as Record<string, unknown>)
-            .flat()
-            .map(String)
-            .join(" ")
-        : `API ${path} failed: ${res.status}`;
-    throw new Error(msg || `API ${path} failed: ${res.status}`);
-  }
+  if (!res.ok) throw new Error(formatApiError(data, res.status, path));
+  return data as T;
+}
+
+/** Multipart POST (e.g. bank-transfer payment screenshot). */
+export async function apiPostForm<T>(path: string, form: FormData): Promise<T> {
+  const res = await fetch(apiUrl(path), {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: form,
+    cache: "no-store",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(formatApiError(data, res.status, path));
   return data as T;
 }
 

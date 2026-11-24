@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CitySelect } from "@/components/CitySelect";
 import { fetchProductMeta } from "@/data/productMeta";
 import { formatPrice, products } from "@/data/products";
-import { apiGet, apiPostJson, type CheckoutResponse } from "@/lib/api";
+import { apiGet, apiPostForm, type CheckoutResponse } from "@/lib/api";
 import {
   estimateShippingForCity,
   hasFreeShipping,
@@ -20,6 +20,13 @@ type TesterSlot = {
   label: string;
   forProductName: string;
   slug: string;
+};
+
+type BankDetails = {
+  bank_name?: string;
+  account_title?: string;
+  account_number?: string;
+  iban?: string;
 };
 
 export default function CheckoutPage() {
@@ -36,6 +43,9 @@ export default function CheckoutPage() {
   const [citiesLoading, setCitiesLoading] = useState(true);
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "bank">("cod");
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
+  const [bankDetails, setBankDetails] = useState<BankDetails | null>(null);
   const safeItems = hydrated ? items : [];
 
   const selectedCity = useMemo(
@@ -92,6 +102,13 @@ export default function CheckoutPage() {
       .finally(() => {
         if (!cancelled) setCitiesLoading(false);
       });
+    apiGet<{ bank_details?: BankDetails }>("/config/")
+      .then((res) => {
+        if (!cancelled) setBankDetails(res.bank_details ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setBankDetails(null);
+      });
     return () => {
       cancelled = true;
     };
@@ -120,8 +137,7 @@ export default function CheckoutPage() {
 
     const form = e.currentTarget;
     const fd = new FormData(form);
-    const paymentRaw = String(fd.get("payment") || "cod");
-    const payment_method = paymentRaw === "bank" ? "bank_transfer" : "cod";
+    const payment_method = paymentMethod === "bank" ? "bank_transfer" : "cod";
 
     try {
       const meta =
@@ -156,19 +172,25 @@ export default function CheckoutPage() {
       });
 
       if (!selectedCity) throw new Error("Please select your city from the list.");
-      const cityForOrder = selectedCity.name.trim();
+      if (paymentMethod === "bank" && !paymentScreenshot) {
+        throw new Error("Payment screenshot is required for bank transfer.");
+      }
 
-      const res = await apiPostJson<CheckoutResponse>("/checkout/", {
-        full_name: String(fd.get("name") || "").trim(),
-        phone: String(fd.get("phone") || "").trim(),
-        city: cityForOrder,
-        address: String(fd.get("address") || "").trim(),
-        email: String(fd.get("email") || "").trim(),
-        notes: String(fd.get("notes") || "").trim(),
-        payment_method,
-        items: apiItems,
-        free_tester_product_ids: freeTesterIds,
-      });
+      const payload = new FormData();
+      payload.append("full_name", String(fd.get("name") || "").trim());
+      payload.append("phone", String(fd.get("phone") || "").trim());
+      payload.append("city", selectedCity.name.trim());
+      payload.append("address", String(fd.get("address") || "").trim());
+      payload.append("email", String(fd.get("email") || "").trim());
+      payload.append("notes", String(fd.get("notes") || "").trim());
+      payload.append("payment_method", payment_method);
+      payload.append("items", JSON.stringify(apiItems));
+      payload.append("free_tester_product_ids", JSON.stringify(freeTesterIds));
+      if (paymentScreenshot) {
+        payload.append("payment_screenshot", paymentScreenshot);
+      }
+
+      const res = await apiPostForm<CheckoutResponse>("/checkout/", payload);
 
       clear();
       router.push(`/order/${encodeURIComponent(res.order_number)}`);
@@ -284,13 +306,72 @@ export default function CheckoutPage() {
                 Payment
               </legend>
               <label className="flex items-center gap-3 text-sm">
-                <input type="radio" name="payment" value="cod" defaultChecked className="accent-[var(--gold)]" />
+                <input
+                  type="radio"
+                  name="payment"
+                  value="cod"
+                  checked={paymentMethod === "cod"}
+                  onChange={() => {
+                    setPaymentMethod("cod");
+                    setPaymentScreenshot(null);
+                  }}
+                  className="accent-[var(--gold)]"
+                />
                 Cash on Delivery
               </label>
               <label className="mt-2 flex items-center gap-3 text-sm">
-                <input type="radio" name="payment" value="bank" className="accent-[var(--gold)]" />
+                <input
+                  type="radio"
+                  name="payment"
+                  value="bank"
+                  checked={paymentMethod === "bank"}
+                  onChange={() => setPaymentMethod("bank")}
+                  className="accent-[var(--gold)]"
+                />
                 Bank transfer
               </label>
+
+              {paymentMethod === "bank" ? (
+                <div className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">
+                  {bankDetails ? (
+                    <div className="space-y-1 text-xs leading-relaxed text-[var(--muted)]">
+                      <p>
+                        Bank:{" "}
+                        <strong className="text-[var(--fg)]">{bankDetails.bank_name}</strong>
+                      </p>
+                      <p>
+                        Title:{" "}
+                        <strong className="text-[var(--fg)]">{bankDetails.account_title}</strong>
+                      </p>
+                      <p>
+                        Account:{" "}
+                        <strong className="text-[var(--fg)]">{bankDetails.account_number}</strong>
+                      </p>
+                      {bankDetails.iban ? (
+                        <p>
+                          IBAN:{" "}
+                          <strong className="text-[var(--fg)]">{bankDetails.iban}</strong>
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <label className="block">
+                    <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
+                      Payment screenshot
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      required={paymentMethod === "bank"}
+                      onChange={(e) => setPaymentScreenshot(e.target.files?.[0] ?? null)}
+                      className="input-field file:mr-3 file:border-0 file:bg-transparent file:text-sm file:text-[var(--gold)]"
+                    />
+                    <span className="mt-1.5 block text-[11px] text-[var(--muted)]">
+                      Upload transfer receipt / screenshot (required).
+                    </span>
+                  </label>
+                </div>
+              ) : null}
             </fieldset>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <button type="submit" className="btn-gold w-full" disabled={submitting}>

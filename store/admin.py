@@ -5,7 +5,7 @@ from django.contrib import admin, messages
 from django.db.models import Sum, Avg, Count
 from django.shortcuts import redirect
 from django.urls import path
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 
 from .models import (
     FlashipCnAudit,
@@ -193,36 +193,60 @@ class OrderAdmin(admin.ModelAdmin):
             Order.STATUS_SHIPPED,
             Order.STATUS_DELIVERED,
         ):
-            return format_html(
+            return mark_safe(
                 '<span style="color:#C9A44C;">Note: Bank transfer orders should be '
                 'marked "Payment Verified" before moving to Processing.</span>'
             )
         if obj.payment_method == Order.PAYMENT_COD:
-            return format_html(
+            return mark_safe(
                 '<span style="color:#C9A44C;">COD order — can move to Processing when ready.</span>'
             )
         return ''
 
     processing_note.short_description = 'Admin note'
 
-    @admin.action(description='Mark as Payment Verified')
-    def mark_payment_verified(self, request, queryset):
+    def _book_flaship_after_payment(self, request, order):
+        """Book Flaship once bank payment is verified (COD amount 0)."""
         from .flaship import book_order_shipment
 
+        if order.flaship_tracking_number:
+            return
+        result = book_order_shipment(order)
+        if result.get('ok'):
+            if not result.get('skipped'):
+                self.message_user(
+                    request,
+                    (
+                        f'{order.order_number}: booked on Flaship — '
+                        f'{result.get("courier_code")} {result.get("tracking_number")}'
+                    ),
+                )
+            return
+        self.message_user(
+            request,
+            f'{order.order_number} verified but Flaship book failed: {result.get("error")}',
+            level=messages.WARNING,
+        )
+
+    def save_model(self, request, obj, form, change):
+        previous_status = None
+        if change and obj.pk:
+            previous_status = (
+                Order.objects.filter(pk=obj.pk).values_list('status', flat=True).first()
+            )
+        super().save_model(request, obj, form, change)
+        # Status dropdown → Payment Verified (bank) also books Flaship
+        if obj.status == Order.STATUS_PAYMENT_VERIFIED and previous_status != Order.STATUS_PAYMENT_VERIFIED:
+            self._book_flaship_after_payment(request, obj)
+
+    @admin.action(description='Mark as Payment Verified (+ book Flaship)')
+    def mark_payment_verified(self, request, queryset):
         updated = 0
         for order in queryset:
             order.status = Order.STATUS_PAYMENT_VERIFIED
             order.save(update_fields=['status', 'updated_at'])
             updated += 1
-            # Prepaid → book with COD 0 after payment confirmed
-            if not order.flaship_tracking_number:
-                result = book_order_shipment(order)
-                if not result.get('ok'):
-                    self.message_user(
-                        request,
-                        f'{order.order_number} verified but Flaship book failed: {result.get("error")}',
-                        level='warning',
-                    )
+            self._book_flaship_after_payment(request, order)
         self.message_user(request, f'{updated} order(s) marked as Payment Verified.')
 
     @admin.action(description='Move to Processing')
