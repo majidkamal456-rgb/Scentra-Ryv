@@ -1,0 +1,79 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block content_title %}
+  <div class="sr-admin-hero">
+    <div>
+      <h1>Flaship CN audit</h1>
+      <p>Courier charges on each CN vs customer delivery fee — margin and contribution profit.</p>
+    </div>
+    <a class="sr-sync-btn" href="{% url 'admin:store_flashipcnaudit_sync' %}">
+      Sync Flaship payments
+    </a>
+  </div>
+{% endblock %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+{% endblock %}
+
+{% block result_list %}
+  {% if audit_summary %}
+    <div class="sr-audit-grid">
+      <div class="sr-audit-card">
+        <span class="label">CNs</span>
+        <div class="value">{{ audit_summary.cn_count }}</div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">CN total charges</span>
+        <div class="value">Rs. {{ audit_summary.sum_total_charges }}</div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">CN delivery charges</span>
+        <div class="value">Rs. {{ audit_summary.sum_delivery }}</div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">Customer DC collected</span>
+        <div class="value">Rs. {{ audit_summary.sum_customer_shipping }}</div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">Shipping profit</span>
+        <div class="value {% if audit_summary.sum_shipping_profit >= 0 %}is-pos{% else %}is-neg{% endif %}">
+          Rs. {{ audit_summary.sum_shipping_profit }}
+        </div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">Avg ship margin</span>
+        <div class="value {% if audit_summary.avg_shipping_margin >= 0 %}is-pos{% else %}is-neg{% endif %}">
+          {{ audit_summary.avg_shipping_margin }}%
+        </div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">Order subtotals</span>
+        <div class="value">Rs. {{ audit_summary.sum_order_subtotal }}</div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">Contribution profit</span>
+        <div class="value {% if audit_summary.sum_contribution >= 0 %}is-pos{% else %}is-neg{% endif %}">
+          Rs. {{ audit_summary.sum_contribution }}
+        </div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">Avg contrib margin</span>
+        <div class="value {% if audit_summary.avg_contribution_margin >= 0 %}is-pos{% else %}is-neg{% endif %}">
+          {{ audit_summary.avg_contribution_margin }}%
+        </div>
+      </div>
+      <div class="sr-audit-card">
+        <span class="label">COD (Flaship)</span>
+        <div class="value">Rs. {{ audit_summary.sum_cod }}</div>
+      </div>
+    </div>
+    <p class="sr-audit-note">
+      Shipping profit = customer DC − CN total charges.
+      Contribution = order subtotal − CN total charges.
+      Use <strong>Sync Flaship payments</strong> to refresh from the live API.
+    </p>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

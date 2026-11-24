@@ -70,7 +70,9 @@ export default function CartPage() {
               Subtotal{" "}
               <span className="font-serif text-2xl text-[var(--gold)]">{formatPrice(subtotal())}</span>
             </p>
-            <p className="text-xs text-[var(--muted)]">Shipping calculated at checkout · Cash on Delivery</p>
+            <p className="text-xs text-[var(--muted)]">
+              Free on Leopard cities · Rs. 200 elsewhere · COD
+            </p>
             <Link href="/checkout" className="btn-gold">
               Proceed to checkout
             </Link>

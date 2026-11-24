@@ -1,0 +1,14 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content_title %}
+  <div class="sr-admin-hero" style="margin-bottom:8px;">
+    <div>
+      <h1>{% trans 'Site administration' %}</h1>
+      <p>Scentra Ryv operations — orders, courier booking, CN charge audit, and store settings.</p>
+    </div>
+    <a class="sr-sync-btn" href="{% url 'admin:store_flashipcnaudit_changelist' %}">
+      Open CN audit
+    </a>
+  </div>
+{% endblock %}

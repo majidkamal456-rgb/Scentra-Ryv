@@ -99,6 +99,25 @@ export type CheckoutResponse = {
   status: string;
   payment_method: string;
   free_tester_name?: string | null;
+  tracking_number?: string | null;
+  courier_code?: string | null;
+};
+
+export type TrackingEvent = {
+  status: string;
+  time: string;
+};
+
+export type ApiTracking = {
+  success: boolean;
+  order_number?: string;
+  tracking_number?: string | null;
+  status?: string | null;
+  live_courier_status?: string | null;
+  courier_code?: string | null;
+  order_status?: string | null;
+  tracking: TrackingEvent[];
+  message?: string | null;
 };
 
 export type ApiOrder = {
@@ -114,6 +133,11 @@ export type ApiOrder = {
   total_amount: string;
   created_at?: string;
   free_tester_name?: string | null;
+  tracking_number?: string | null;
+  courier_code?: string | null;
+  courier_status?: string | null;
+  courier_label_url?: string | null;
+  live_tracking?: ApiTracking | null;
   items: Array<{
     product_name: string;
     size_ml: string;
@@ -138,6 +162,15 @@ export function fetchApiProductDetail(slug: string) {
   return apiGet<ApiProductDetail>(`/products/${encodeURIComponent(slug)}/`);
 }
 
-export function fetchApiOrder(orderNumber: string) {
-  return apiGet<ApiOrder>(`/orders/${encodeURIComponent(orderNumber)}/`);
+export function fetchApiOrder(orderNumber: string, live = false) {
+  const q = live ? "?live=1" : "";
+  return apiGet<ApiOrder>(`/orders/${encodeURIComponent(orderNumber)}/${q}`);
+}
+
+export function fetchOrderTracking(orderNumber: string) {
+  return apiGet<ApiTracking>(`/orders/${encodeURIComponent(orderNumber)}/tracking/`);
+}
+
+export function fetchTrackingByCn(trackingNumber: string) {
+  return apiGet<ApiTracking>(`/tracking/${encodeURIComponent(trackingNumber)}/`);
 }

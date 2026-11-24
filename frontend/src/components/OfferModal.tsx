@@ -41,7 +41,7 @@ export function OfferModal() {
       className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="White Friday and New Year offer"
+      aria-label="White Friday offer — free delivery until 25 December"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <button
@@ -83,10 +83,11 @@ export function OfferModal() {
             Limited season
           </p>
           <h2 className="font-serif relative mt-2 text-[1.65rem] leading-tight text-[var(--fg)] sm:mt-3 sm:text-4xl">
-            White Friday &amp; New Year
+            White Friday
           </h2>
           <p className="relative mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-[var(--muted)] sm:mt-3 sm:text-sm">
-            Special season pricing and free tester with every perfume — ends 31 December.
+            Free delivery on Leopard-mapped cities · Rs. 200 elsewhere + free tester — ends 25
+            December.
           </p>
 
           <div className="relative mt-5 sm:mt-8">

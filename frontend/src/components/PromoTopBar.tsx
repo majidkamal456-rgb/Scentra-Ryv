@@ -21,8 +21,10 @@ export function PromoTopBar() {
       {/* Mobile: stacked compact · Desktop: single row */}
       <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-1.5 px-2 py-2 sm:flex-row sm:justify-between sm:gap-4 sm:px-4 sm:py-2.5 lg:px-8">
         <p className="text-center text-[9px] leading-tight tracking-[0.16em] text-[var(--gold)] uppercase sm:text-[11px] sm:tracking-[0.2em]">
-          <span className="sm:hidden">White Friday &amp; NYE · Ends 31 Dec</span>
-          <span className="hidden sm:inline">White Friday &amp; New Year · Ends 31 Dec</span>
+          <span className="sm:hidden">Free · Leopard cities · Ends 25 Dec</span>
+          <span className="hidden sm:inline">
+            White Friday · Free Leopard delivery · Ends 25 Dec
+          </span>
         </p>
         <CountdownTimer size="sm" />
         <Link

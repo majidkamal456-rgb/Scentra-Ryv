@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { fetchProductMeta } from "@/data/productMeta";
 import { formatPrice, products } from "@/data/products";
-import { apiPostJson, type CheckoutResponse } from "@/lib/api";
+import { apiGet, apiPostJson, type CheckoutResponse } from "@/lib/api";
+import {
+  estimateShippingForCity,
+  hasFreeShipping,
+  SHIPPING_OTHER,
+  type ShippingCity,
+} from "@/lib/shipping";
 import { useCart, useCartHydrated } from "@/store/cart";
 
 type TesterSlot = {
@@ -25,12 +31,45 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [idBySlug, setIdBySlug] = useState<Record<string, number>>({});
   const [testerSlugs, setTesterSlugs] = useState<string[]>([]);
+  const [cities, setCities] = useState<ShippingCity[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(true);
+  const [cityQuery, setCityQuery] = useState("");
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+  const [isOtherCity, setIsOtherCity] = useState(false);
+  const [otherCity, setOtherCity] = useState("");
+  const [address, setAddress] = useState("");
   const safeItems = hydrated ? items : [];
+
+  const selectedCity = useMemo(
+    () => cities.find((c) => c.id === selectedCityId) ?? null,
+    [cities, selectedCityId],
+  );
+  const city = isOtherCity ? otherCity.trim() : selectedCity?.name?.trim() || "";
 
   const paidUnits = useMemo(
     () => safeItems.reduce((n, i) => n + i.quantity, 0),
     [safeItems],
   );
+
+  const shipping = useMemo(
+    () => estimateShippingForCity(selectedCity, isOtherCity),
+    [selectedCity, isOtherCity],
+  );
+  const cartSubtotal = hydrated ? subtotal() : 0;
+  const orderTotal = cartSubtotal + shipping;
+  const freeDelivery = hasFreeShipping(selectedCity) && !isOtherCity;
+
+  const filteredCities = useMemo(() => {
+    const q = cityQuery.trim().toLowerCase();
+    const pool = q
+      ? cities.filter(
+          (c) =>
+            c.name.toLowerCase().includes(q) ||
+            c.normalized_name.toLowerCase().includes(q),
+        )
+      : cities.filter((c) => hasFreeShipping(c) || c.has_leopard);
+    return pool.slice(0, 80);
+  }, [cities, cityQuery]);
 
   const testerSlots: TesterSlot[] = useMemo(() => {
     const slots: TesterSlot[] = [];
@@ -55,6 +94,24 @@ export default function CheckoutPage() {
       for (const [slug, m] of Object.entries(meta)) map[slug] = m.dbId;
       setIdBySlug(map);
     });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCitiesLoading(true);
+    apiGet<{ cities: ShippingCity[] }>("/cities/")
+      .then((res) => {
+        if (!cancelled) setCities(res.cities ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setCities([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCitiesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Keep one tester choice per paid perfume unit
@@ -115,10 +172,16 @@ export default function CheckoutPage() {
         return id;
       });
 
+      const cityForOrder = city.trim();
+      if (!isOtherCity && !selectedCity) throw new Error("Please select your city.");
+      if (isOtherCity && !cityForOrder) {
+        throw new Error("Please enter your city name.");
+      }
+
       const res = await apiPostJson<CheckoutResponse>("/checkout/", {
         full_name: String(fd.get("name") || "").trim(),
         phone: String(fd.get("phone") || "").trim(),
-        city: String(fd.get("city") || "").trim(),
+        city: cityForOrder,
         address: String(fd.get("address") || "").trim(),
         email: String(fd.get("email") || "").trim(),
         notes: String(fd.get("notes") || "").trim(),
@@ -169,13 +232,110 @@ export default function CheckoutPage() {
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
             <Field label="Full name" name="name" required />
             <Field label="Phone" name="phone" type="tel" required placeholder="03XXXXXXXXX" />
-            <Field label="City" name="city" required />
+            <div className="block">
+              <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
+                City
+              </span>
+              {citiesLoading ? (
+                <p className="text-sm text-[var(--muted)]">Loading cities…</p>
+              ) : (
+                <>
+                  <input
+                    type="search"
+                    value={cityQuery}
+                    onChange={(e) => {
+                      setCityQuery(e.target.value);
+                      setIsOtherCity(false);
+                    }}
+                    placeholder="Search your city"
+                    className="input-field"
+                    autoComplete="address-level2"
+                  />
+                  <div className="mt-2 max-h-48 overflow-y-auto border border-[var(--border)]">
+                    {filteredCities.length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-[var(--muted)]">No match — use Other city.</p>
+                    ) : (
+                      filteredCities.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCityId(c.id);
+                            setCityQuery(c.name);
+                            setIsOtherCity(false);
+                            setOtherCity("");
+                          }}
+                          className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-[color-mix(in_srgb,var(--gold)_12%,transparent)] ${
+                            selectedCityId === c.id ? "bg-[color-mix(in_srgb,var(--gold)_16%,transparent)]" : ""
+                          }`}
+                        >
+                          <span>{c.name}</span>
+                          <span className="text-[10px] tracking-wide text-[var(--gold)] uppercase">
+                            {hasFreeShipping(c) ? "Free delivery" : `Rs. ${SHIPPING_OTHER}`}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOtherCity(true);
+                      setSelectedCityId(null);
+                      setCityQuery("");
+                    }}
+                    className={`mt-2 w-full border px-3 py-2 text-left text-sm ${
+                      isOtherCity
+                        ? "border-[var(--gold)] text-[var(--gold)]"
+                        : "border-[var(--border)] text-[var(--muted)]"
+                    }`}
+                  >
+                    Other city / area (Rs. {SHIPPING_OTHER} shipping)
+                  </button>
+                  {selectedCity && !isOtherCity ? (
+                    <p className="mt-1.5 text-[11px] text-[var(--muted)]">
+                      Selected: <strong className="text-[var(--fg)]">{selectedCity.name}</strong>
+                      {freeDelivery
+                        ? " · free delivery (Punjab)"
+                        : ` · Rs. ${SHIPPING_OTHER} shipping`}
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-[11px] text-[var(--muted)]">
+                      Free delivery for Punjab Leopard cities · else Rs. {SHIPPING_OTHER}.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+            {isOtherCity ? (
+              <label className="block">
+                <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
+                  Your city / area
+                </span>
+                <input
+                  required
+                  value={otherCity}
+                  onChange={(e) => setOtherCity(e.target.value)}
+                  placeholder="Type your city name"
+                  className="input-field"
+                />
+              </label>
+            ) : null}
+            <input type="hidden" name="city" value={city} />
+            <input type="hidden" name="flaship_city_id" value={selectedCity?.id ?? ""} />
             <Field label="Email (optional)" name="email" type="email" />
             <label className="block">
               <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
                 Address
               </span>
-              <textarea name="address" required rows={3} className="input-field resize-none" />
+              <textarea
+                name="address"
+                required
+                rows={3}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="input-field resize-none"
+              />
             </label>
 
             <fieldset className="space-y-4 border border-[var(--gold)]/35 bg-[color-mix(in_srgb,var(--gold)_6%,transparent)] p-4">
@@ -265,12 +425,36 @@ export default function CheckoutPage() {
             })}
           </ul>
           <div className="gold-rule my-5" />
-          <div className="flex justify-between">
+          <div className="flex justify-between text-sm">
             <span className="text-[var(--muted)]">Subtotal</span>
-            <span className="font-serif text-xl text-[var(--gold)]">{formatPrice(subtotal())}</span>
+            <span>{formatPrice(cartSubtotal)}</span>
+          </div>
+          <div className="mt-3 flex justify-between text-sm">
+            <span className="text-[var(--muted)]">
+              Shipping
+              {selectedCity || isOtherCity ? (
+                <span className="mt-0.5 block text-[10px] tracking-wide normal-case">
+                  {freeDelivery ? "Free delivery (Punjab)" : `Rs. ${SHIPPING_OTHER} shipping`}
+                </span>
+              ) : (
+                <span className="mt-0.5 block text-[10px] tracking-wide normal-case">
+                  Select city to calculate
+                </span>
+              )}
+            </span>
+            <span className="text-[var(--gold)]">
+              {selectedCity || isOtherCity ? formatPrice(shipping) : "—"}
+            </span>
+          </div>
+          <div className="mt-4 flex justify-between border-t border-[var(--border)] pt-4">
+            <span className="text-[var(--muted)]">Total</span>
+            <span className="font-serif text-xl text-[var(--gold)]">
+              {selectedCity || isOtherCity ? formatPrice(orderTotal) : formatPrice(cartSubtotal)}
+            </span>
           </div>
           <p className="mt-3 text-xs text-[var(--muted)]">
-            {paidUnits} free tester{paidUnits > 1 ? "s" : ""} · Shipping confirmed after order
+            {paidUnits} free tester{paidUnits > 1 ? "s" : ""} · Punjab free · else Rs.{" "}
+            {SHIPPING_OTHER}
           </p>
         </aside>
       </div>

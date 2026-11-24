@@ -402,55 +402,60 @@ def _place_match(name, places):
 
 
 def is_nearby_city(city, address=None):
-    """True for Punjab / ICT (Rs. 250)."""
-    name = _combined_location_text(city, address)
-    if not name:
-        return False
-    if _keyword_match(name, NEARBY_PROVINCE_KEYWORDS):
+    """
+    True only for Leopard Couriers service cities in Punjab / ICT.
+
+    Writing "Punjab" alone (or a non-listed Punjab village) is NOT free —
+    the city/area must match the allowlist.
+    """
+    # Prefer the city field; address only fills gaps for compound names.
+    city_name = _normalize_city(city)
+    if city_name and _place_match(city_name, NEARBY_CITIES):
         return True
-    return _place_match(name, NEARBY_CITIES)
+    # Fallback: city typed into address line (e.g. "Street 4, Lahore")
+    full = _combined_location_text(city, address)
+    if full and _place_match(full, NEARBY_CITIES):
+        return True
+    return False
 
 
 def is_remote_city(city, address=None):
     """
-    True for Sindh / Balochistan / KPK / Kashmir (Rs. 280).
+    True when NOT in Leopard Punjab/ICT free zone.
 
-    Unknown villages default to remote so Balochistan/Kashmir settlements
-    are not undercharged as Punjab.
+    Outside Punjab, and Punjab towns without Leopard service → paid rate.
     """
-    name = _combined_location_text(city, address)
-    if not name:
-        return False
-
-    # Explicit Punjab / ICT → nearby
-    if is_nearby_city(city, address):
-        return False
-
-    # Explicit remote province / city
-    if _keyword_match(name, REMOTE_PROVINCE_KEYWORDS):
+    if not _combined_location_text(city, address):
         return True
-    if _place_match(name, REMOTE_CITIES):
-        return True
-
-    # Unknown place name → remote rate (safer for villages outside Punjab)
-    return True
+    return not is_nearby_city(city, address)
 
 
 def calculate_shipping(quantity, city=None, address=None):
     """
-    Punjab / ICT: Rs. 250.
-    Sindh / Balochistan / KPK / Kashmir (and unknown villages): Rs. 280.
-    No per-extra-item fee.
+    Free (no DC): Flaship Leopard cities in Punjab / ICT.
+    Paid: all other cities — SHIPPING_OTHER_RATE (Rs. 200–250).
     """
     quantity = int(quantity or 0)
     if quantity <= 0:
         return Decimal('0.00')
 
-    punjab_rate = getattr(settings, 'SHIPPING_NEARBY_RATE', Decimal('250.00'))
-    remote_rate = getattr(settings, 'SHIPPING_OTHER_RATE', Decimal('280.00'))
+    free_rate = getattr(settings, 'SHIPPING_NEARBY_RATE', Decimal('0.00'))
+    paid_rate = getattr(settings, 'SHIPPING_OTHER_RATE', Decimal('200.00'))
 
-    base = remote_rate if is_remote_city(city, address) else punjab_rate
-    return Decimal(base)
+    try:
+        from .flaship import fetch_leopard_cities, is_free_shipping_city
+
+        if fetch_leopard_cities():
+            if is_free_shipping_city(city or '', address):
+                return Decimal(free_rate)
+            return Decimal(paid_rate)
+    except Exception:
+        pass
+
+    # Offline fallback — static Punjab allowlist
+    if is_nearby_city(city, address):
+        return Decimal(free_rate)
+    return Decimal(paid_rate)
 
 
 def shipping_range(quantity):

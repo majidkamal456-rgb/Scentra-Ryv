@@ -182,6 +182,15 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     shipping = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Flaship Partners booking
+    flaship_booking_id = models.CharField(max_length=64, blank=True)
+    flaship_tracking_number = models.CharField(max_length=64, blank=True)
+    flaship_courier_code = models.CharField(max_length=32, blank=True)
+    flaship_booking_status = models.CharField(max_length=40, blank=True)
+    flaship_label_url = models.URLField(max_length=500, blank=True)
+    flaship_booking_error = models.CharField(max_length=500, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -223,3 +232,135 @@ class OrderItem(models.Model):
     @property
     def line_total(self):
         return self.price_at_purchase * self.quantity
+
+
+class StoreSettings(models.Model):
+    """
+    Singleton store settings — admin only.
+
+    Flaship pickup is chosen here and never shown on the customer checkout page.
+    """
+
+    flaship_pickup_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Flaship pickup location used for shipment booking. Leave empty to auto-use the only / default pickup.',
+    )
+    flaship_pickup_label = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='Cached label from Flaship (name · city).',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Store settings'
+        verbose_name_plural = 'Store settings'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        if self.flaship_pickup_id:
+            label = self.flaship_pickup_label or f'#{self.flaship_pickup_id}'
+            return f'Store settings · pickup {label}'
+        return 'Store settings · pickup auto'
+
+
+class FlashipCnAudit(models.Model):
+    """
+    CN payment / charges audit from Flaship GET /api/integration/payments/.
+
+    Compares courier CN charges vs customer shipping charged on the store order
+    to compute shipping profit and margin ratio.
+    """
+
+    tracking_number = models.CharField(max_length=64, unique=True, db_index=True)
+    order = models.ForeignKey(
+        Order,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='flaship_audits',
+    )
+    order_number = models.CharField(max_length=32, blank=True, db_index=True)
+    external_ref_no = models.CharField(max_length=64, blank=True)
+    courier_code = models.CharField(max_length=32, blank=True)
+    shipment_status = models.CharField(max_length=40, blank=True)
+    finance_status = models.CharField(max_length=40, blank=True)
+    settlement_status = models.CharField(max_length=40, blank=True, db_index=True)
+    settlement_date = models.CharField(max_length=32, blank=True)
+    cheque_no = models.CharField(max_length=64, blank=True)
+    arrival_weight = models.CharField(max_length=20, blank=True)
+
+    cod_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    line_net = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    delivery_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    service_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    osa_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    core_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    income_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    withholding_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_charges = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='Total charges billed on the CN by courier/Flaship.',
+    )
+
+    customer_shipping = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='Delivery charges collected from customer on the store order.',
+    )
+    order_subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    order_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    shipping_profit = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='customer_shipping − total_charges',
+    )
+    shipping_margin_pct = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        help_text='Shipping profit ÷ customer shipping × 100 (or -100 if free ship + courier cost).',
+    )
+    contribution_profit = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='order_subtotal − total_charges (product revenue after courier cost)',
+    )
+    contribution_margin_pct = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        help_text='contribution_profit ÷ order_subtotal × 100',
+    )
+
+    raw_payload = models.JSONField(default=dict, blank=True)
+    synced_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-synced_at']
+        verbose_name = 'Flaship CN audit'
+        verbose_name_plural = 'Flaship CN audits'
+
+    def __str__(self):
+        return f'CN {self.tracking_number} · charges {self.total_charges}'

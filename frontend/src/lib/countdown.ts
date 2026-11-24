@@ -1,5 +1,5 @@
-/** White Friday + New Year campaign ends 31 Dec 2026 (Pakistan). */
-export const CAMPAIGN_END = new Date("2026-12-31T23:59:59+05:00");
+/** White Friday campaign ends 25 Dec 2026 (Pakistan). */
+export const CAMPAIGN_END = new Date("2026-12-25T23:59:59+05:00");
 
 export type CountdownParts = {
   days: number;

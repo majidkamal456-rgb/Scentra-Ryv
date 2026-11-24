@@ -171,9 +171,41 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Store / checkout settings
-# Punjab / ICT = 250; Sindh / Balochistan / KPK / Kashmir = 280.
-SHIPPING_NEARBY_RATE = Decimal(os.getenv('SHIPPING_NEARBY_RATE', '250.00'))  # Punjab
-SHIPPING_OTHER_RATE = Decimal(os.getenv('SHIPPING_OTHER_RATE', '280.00'))  # remote provinces
+# Free: Flaship Leopard cities in Punjab/ICT. Else DC Rs. 200–250.
+SHIPPING_NEARBY_RATE = Decimal(os.getenv('SHIPPING_NEARBY_RATE', '0.00'))
+SHIPPING_OTHER_RATE = Decimal(os.getenv('SHIPPING_OTHER_RATE', '200.00'))
+
+# Flaship Partners (cities / courier booking) — keep key server-side only
+FLASHIP_API_KEY = os.getenv('FLASHIP_API_KEY', '').strip()
+FLASHIP_API_BASE = os.getenv('FLASHIP_API_BASE', 'https://partners.flaship.pk').strip()
+FLASHIP_CITIES_URL = os.getenv(
+    'FLASHIP_CITIES_URL',
+    f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/cities/',
+).strip()
+FLASHIP_PICKUPS_URL = os.getenv(
+    'FLASHIP_PICKUPS_URL',
+    f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/pickups/',
+).strip()
+FLASHIP_BOOKINGS_URL = os.getenv(
+    'FLASHIP_BOOKINGS_URL',
+    f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/bookings/',
+).strip()
+FLASHIP_PAYMENTS_URL = os.getenv(
+    'FLASHIP_PAYMENTS_URL',
+    f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/payments/',
+).strip()
+FLASHIP_TRACKING_URL_TEMPLATE = os.getenv(
+    'FLASHIP_TRACKING_URL_TEMPLATE',
+    f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/orders/{{tracking_number}}/tracking/',
+).strip()
+# Optional pickup override. Empty = dynamic from GET /api/integration/pickups/
+# (single pickup → that one; multiple → is_default, else first).
+FLASHIP_PICKUP_ID = os.getenv('FLASHIP_PICKUP_ID', '').strip()
+FLASHIP_DEFAULT_SERVICE_TYPE = os.getenv('FLASHIP_DEFAULT_SERVICE_TYPE', 'overnight').strip()
+FLASHIP_DEFAULT_WEIGHT_KG = os.getenv('FLASHIP_DEFAULT_WEIGHT_KG', '0.500').strip()
+FLASHIP_FALLBACK_COURIER = os.getenv('FLASHIP_FALLBACK_COURIER', 'tcs').strip()
+FLASHIP_AUTO_BOOK = os.getenv('FLASHIP_AUTO_BOOK', 'True').lower() in ('true', '1', 'yes')
+
 WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '923177478167')
 CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', 'scentraryv@gmail.com')
 ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_EMAIL)

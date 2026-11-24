@@ -112,6 +112,42 @@ def site_config(request):
     })
 
 
+@api_view(['GET'])
+def shipping_cities(request):
+    """
+    Flaship GET /cities/ → Leopard cities only.
+
+    Punjab Leopard cities → free shipping (DC 0).
+    Other Leopard cities → paid DC (SHIPPING_OTHER_RATE, Rs. 200–250).
+    """
+    from .flaship import shipping_city_options
+
+    q = (request.query_params.get('q') or '').strip()
+    free_only = (request.query_params.get('free') or '').lower() in ('1', 'true', 'yes')
+    options = shipping_city_options(leopard_only=True)
+    if free_only:
+        options = [c for c in options if c.get('free_shipping')]
+    if q:
+        needle = q.lower()
+        options = [
+            c
+            for c in options
+            if needle in (c.get('name') or '').lower()
+            or needle in (c.get('normalized_name') or '').lower()
+        ]
+    return Response(
+        {
+            'success': True,
+            'count': len(options),
+            'courier': 'leopard',
+            'shipping_free': str(settings.SHIPPING_NEARBY_RATE),
+            'shipping_paid': str(settings.SHIPPING_OTHER_RATE),
+            'rule': 'Free for Leopard + Punjab/ICT; else paid DC',
+            'cities': options,
+        }
+    )
+
+
 @api_view(['POST'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
 def checkout_create(request):
@@ -262,6 +298,15 @@ def checkout_create(request):
 
     send_order_notification(order)
 
+    # Auto-book Flaship for COD (bank transfer books after payment verified / admin)
+    booking = None
+    auto_book = getattr(settings, 'FLASHIP_AUTO_BOOK', True)
+    if auto_book and payment_method == Order.PAYMENT_COD:
+        from .flaship import book_order_shipment
+
+        booking = book_order_shipment(order)
+        order.refresh_from_db()
+
     return Response({
         'order_number': order.order_number,
         'total_amount': str(order.total_amount),
@@ -270,12 +315,27 @@ def checkout_create(request):
         'status': order.status,
         'payment_method': order.payment_method,
         'free_tester_name': order.free_tester_name or None,
+        'tracking_number': order.flaship_tracking_number or None,
+        'courier_code': order.flaship_courier_code or None,
+        'flaship_booking': booking,
     }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
 def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
+
+    live = None
+    if order.flaship_tracking_number and request.query_params.get('live') in (
+        '1',
+        'true',
+        'True',
+    ):
+        from .flaship import sync_order_from_tracking
+
+        live = sync_order_from_tracking(order)
+        order.refresh_from_db()
+
     items = [
         {
             'product_name': item.product_name,
@@ -301,8 +361,52 @@ def order_detail(request, order_number):
         'total_amount': str(order.total_amount),
         'created_at': order.created_at.isoformat(),
         'free_tester_name': order.free_tester_name or None,
+        'tracking_number': order.flaship_tracking_number or None,
+        'courier_code': order.flaship_courier_code or None,
+        'courier_status': order.flaship_booking_status or None,
+        'courier_label_url': order.flaship_label_url or None,
+        'live_tracking': live,
         'items': items,
     })
+
+
+@api_view(['GET'])
+def order_tracking(request, order_number):
+    """Live Flaship tracking for a store order number."""
+    order = get_object_or_404(Order, order_number=order_number)
+    if not order.flaship_tracking_number:
+        return Response(
+            {
+                'success': False,
+                'order_number': order.order_number,
+                'message': 'No courier tracking number yet.',
+                'tracking': [],
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    from .flaship import sync_order_from_tracking
+
+    data = sync_order_from_tracking(order)
+    order.refresh_from_db()
+    return Response(
+        {
+            **data,
+            'order_number': order.order_number,
+            'courier_code': order.flaship_courier_code or None,
+            'order_status': order.status,
+        }
+    )
+
+
+@api_view(['GET'])
+def tracking_by_cn(request, tracking_number):
+    """Live Flaship tracking by consignment / CN number."""
+    from .flaship import track_shipment
+
+    data = track_shipment(tracking_number)
+    http = status.HTTP_200_OK if data.get('success') else status.HTTP_404_NOT_FOUND
+    return Response(data, status=http)
 
 
 @api_view(['POST'])
