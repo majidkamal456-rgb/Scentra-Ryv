@@ -86,7 +86,7 @@ export function OfferModal() {
             White Friday
           </h2>
           <p className="relative mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-[var(--muted)] sm:mt-3 sm:text-sm">
-            Free delivery on Leopard-mapped cities · Rs. 200 elsewhere + free tester — ends 25
+            Free where Leopard DC is Rs. 181 · Rs. 200 elsewhere + free tester — ends 25
             December.
           </p>
 

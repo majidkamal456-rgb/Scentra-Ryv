@@ -171,7 +171,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Store / checkout settings
-# Free: Flaship Leopard cities in Punjab/ICT. Else DC Rs. 200–250.
+# Free: Leopard standard DC (≈ Rs. 181 incl. fuel + ST). Else customer DC Rs. 200.
 SHIPPING_NEARBY_RATE = Decimal(os.getenv('SHIPPING_NEARBY_RATE', '0.00'))
 SHIPPING_OTHER_RATE = Decimal(os.getenv('SHIPPING_OTHER_RATE', '200.00'))
 
@@ -194,6 +194,10 @@ FLASHIP_PAYMENTS_URL = os.getenv(
     'FLASHIP_PAYMENTS_URL',
     f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/payments/',
 ).strip()
+FLASHIP_RATE_CARDS_URL = os.getenv(
+    'FLASHIP_RATE_CARDS_URL',
+    f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/rate-cards/',
+).strip()
 FLASHIP_TRACKING_URL_TEMPLATE = os.getenv(
     'FLASHIP_TRACKING_URL_TEMPLATE',
     f'{FLASHIP_API_BASE.rstrip("/")}/api/integration/orders/{{tracking_number}}/tracking/',
@@ -202,6 +206,9 @@ FLASHIP_TRACKING_URL_TEMPLATE = os.getenv(
 # (single pickup → that one; multiple → is_default, else first).
 FLASHIP_PICKUP_ID = os.getenv('FLASHIP_PICKUP_ID', '').strip()
 FLASHIP_DEFAULT_SERVICE_TYPE = os.getenv('FLASHIP_DEFAULT_SERVICE_TYPE', 'overnight').strip()
+# Free when estimated Leopard DC (incl. fuel + ST) is at or below this (Flaship shows ~181).
+FLASHIP_FREE_DC_MAX = Decimal(os.getenv('FLASHIP_FREE_DC_MAX', '181'))
+FLASHIP_SALES_TAX_PERCENT = Decimal(os.getenv('FLASHIP_SALES_TAX_PERCENT', '16'))
 FLASHIP_DEFAULT_WEIGHT_KG = os.getenv('FLASHIP_DEFAULT_WEIGHT_KG', '0.500').strip()
 FLASHIP_FALLBACK_COURIER = os.getenv('FLASHIP_FALLBACK_COURIER', 'tcs').strip()
 FLASHIP_AUTO_BOOK = os.getenv('FLASHIP_AUTO_BOOK', 'True').lower() in ('true', '1', 'yes')

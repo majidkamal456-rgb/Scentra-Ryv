@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 CITIES_CACHE_KEY = "flaship:integration_cities:v1"
 PICKUPS_CACHE_KEY = "flaship:integration_pickups:v1"
+RATE_CARDS_CACHE_KEY = "flaship:integration_rate_cards:v1"
+LEOPARD_DC_CACHE_KEY = "flaship:leopard_inclusive_dc:v2"
 CACHE_TTL = 60 * 60  # 1 hour
 
 # Prefer Leopard for free-shipping cities; then common carriers
@@ -57,6 +59,14 @@ def _cities_url() -> str:
     )
 
 
+def _rate_cards_url() -> str:
+    return getattr(
+        settings,
+        "FLASHIP_RATE_CARDS_URL",
+        f"{_base()}/api/integration/rate-cards/",
+    )
+
+
 def _pickups_url() -> str:
     return getattr(
         settings,
@@ -78,6 +88,14 @@ def _payments_url() -> str:
         settings,
         "FLASHIP_PAYMENTS_URL",
         f"{_base()}/api/integration/payments/",
+    )
+
+
+def _orders_url() -> str:
+    return getattr(
+        settings,
+        "FLASHIP_ORDERS_URL",
+        f"{_base()}/api/integration/orders/",
     )
 
 
@@ -237,6 +255,103 @@ def fetch_leopard_cities(*, force: bool = False) -> list[dict[str, Any]]:
     return [row for row in fetch_flaship_cities(force=force) if city_has_leopard(row)]
 
 
+def fetch_rate_cards(*, force: bool = False) -> list[dict[str, Any]]:
+    """GET /api/integration/rate-cards/ → couriers[].rate_cards[]"""
+    if not force:
+        cached = cache.get(RATE_CARDS_CACHE_KEY)
+        if cached is not None:
+            return cached
+    if not _api_key():
+        return []
+    try:
+        res = requests.get(_rate_cards_url(), headers=_headers(), timeout=30)
+        res.raise_for_status()
+        payload = res.json()
+    except Exception:
+        logger.exception("Flaship rate-cards fetch failed")
+        return []
+    couriers = list(payload.get("couriers") or payload.get("companies") or [])
+    cache.set(RATE_CARDS_CACHE_KEY, couriers, CACHE_TTL)
+    return couriers
+
+
+def _free_dc_max() -> Decimal:
+    return _dec(getattr(settings, "FLASHIP_FREE_DC_MAX", "181"), "181")
+
+
+def _sales_tax_percent() -> Decimal:
+    return _dec(getattr(settings, "FLASHIP_SALES_TAX_PERCENT", "16"), "16")
+
+
+def estimate_leopard_inclusive_dc(*, weight_kg: Decimal | float | str | None = None) -> Decimal:
+    """
+    Standard Leopard overnight DC incl. fuel % + sales tax %, matching Flaship (~181).
+
+    Formula: ceil(base * (1 + fuel%) * (1 + ST%))
+    Example: 134 * 1.16 * 1.16 → 181
+    """
+    from math import ceil
+
+    if weight_kg is None:
+        weight_kg = getattr(settings, "FLASHIP_DEFAULT_WEIGHT_KG", "0.500") or "0.500"
+    weight = _dec(weight_kg, "0.500")
+
+    cache_key = f"{LEOPARD_DC_CACHE_KEY}:{weight}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return _dec(cached, "181")
+
+    service = (
+        str(getattr(settings, "FLASHIP_DEFAULT_SERVICE_TYPE", "overnight") or "overnight")
+        .strip()
+        .lower()
+    )
+    base = Decimal("134")
+    fuel_pct = Decimal("16")
+
+    for courier in fetch_rate_cards():
+        code = str(courier.get("courier_code") or courier.get("code") or "").lower()
+        if code != "leopard":
+            continue
+        slabs = [
+            rc
+            for rc in (courier.get("rate_cards") or [])
+            if str(rc.get("service_type") or "").lower() == service
+        ]
+        matched = None
+        for rc in slabs:
+            w_from = _dec(rc.get("weight_from_kg"), "0")
+            w_to = _dec(rc.get("weight_to_kg"), "999")
+            if w_from <= weight <= w_to:
+                matched = rc
+                break
+        if matched is None and slabs:
+            matched = slabs[0]
+        if matched:
+            base = _dec(matched.get("charges"), "134")
+            fuel_pct = _dec(matched.get("fuel_charges_percent"), "16")
+        break
+
+    st_pct = _sales_tax_percent()
+    factor = (Decimal("1") + fuel_pct / Decimal("100")) * (
+        Decimal("1") + st_pct / Decimal("100")
+    )
+    inclusive = Decimal(ceil(float(base * factor)))
+    cache.set(cache_key, str(inclusive), CACHE_TTL)
+    return inclusive
+
+
+def estimate_leopard_dc_for_city(city_row: dict[str, Any] | None) -> Decimal | None:
+    """
+    Estimated Leopard DC for a city from Flaship rate-cards.
+
+    Overnight 0.5kg incl. fuel + ST ≈ Rs. 181 wherever Leopard is mapped.
+    """
+    if not city_row or not city_has_leopard(city_row):
+        return None
+    return estimate_leopard_inclusive_dc()
+
+
 def normalize_city_name(value: str) -> str:
     if not value:
         return ""
@@ -252,11 +367,22 @@ def is_punjab_city_name(name: str) -> bool:
 
 
 def city_qualifies_free_shipping(city_row: dict[str, Any]) -> bool:
-    """Free DC only for Leopard-mapped Punjab / ICT cities from Flaship."""
-    if not city_has_leopard(city_row):
+    """
+    Free shipping when:
+    - city is Punjab / ICT (any Flaship city), OR
+    - Leopard DC incl. fuel+ST is <= FLASHIP_FREE_DC_MAX (~181)
+
+    Everything else → SHIPPING_OTHER_RATE (Rs. 200).
+    """
+    if not city_row:
         return False
     label = city_row.get("name") or city_row.get("normalized_name") or ""
-    return is_punjab_city_name(str(label))
+    if is_punjab_city_name(str(label)):
+        return True
+    estimated = estimate_leopard_dc_for_city(city_row)
+    if estimated is None:
+        return False
+    return estimated <= _free_dc_max()
 
 
 def find_city_by_name(name: str, cities: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
@@ -300,24 +426,24 @@ def is_leopard_service_city(city: str, address: str | None = None) -> bool:
 
 def is_free_shipping_city(city: str, address: str | None = None) -> bool:
     """
-    Free shipping: city must appear on Flaship with Leopard AND be Punjab/ICT.
-
-    Karachi/Peshawar with Leopard → paid. Lahore/Faisalabad with Leopard → free.
+    Free: Punjab/ICT cities, or Leopard destinations at ~181 DC incl. fuel+ST.
     """
-    leopard_rows = fetch_leopard_cities()
-    if not leopard_rows:
-        # Offline fallback — static Punjab allowlist only
-        from .shipping import is_nearby_city
+    from .shipping import is_nearby_city
 
+    rows = fetch_flaship_cities()
+    if not rows:
         return is_nearby_city(city or "", address)
 
-    row = find_city_by_name(city, leopard_rows)
+    row = find_city_by_name(city, rows)
     if row and city_qualifies_free_shipping(row):
+        return True
+
+    if is_nearby_city(city or "", address):
         return True
 
     if address:
         addr = normalize_city_name(address)
-        for row in leopard_rows:
+        for row in rows:
             if not city_qualifies_free_shipping(row):
                 continue
             label = normalize_city_name(row.get("name") or "")
@@ -330,16 +456,17 @@ def shipping_city_options(*, leopard_only: bool = True) -> list[dict[str, Any]]:
     """
     Checkout city list from Flaship GET /cities/.
 
-    Default: Leopard cities only.
-    Free shipping (DC 0) = Leopard + Punjab/ICT.
-    Everyone else on the list = SHIPPING_OTHER_RATE (Rs. 200–250).
+    Default: only cities where Leopard operates.
+    Free: Punjab/ICT, or Leopard DC <= ~181. Else Rs. 200.
     """
     free_rate = str(getattr(settings, "SHIPPING_NEARBY_RATE", "0.00"))
     paid_rate = str(getattr(settings, "SHIPPING_OTHER_RATE", "200.00"))
+    standard_dc = estimate_leopard_inclusive_dc()
     source = fetch_leopard_cities() if leopard_only else fetch_flaship_cities()
     options = []
     for row in source:
         leopard = city_has_leopard(row)
+        estimated = estimate_leopard_dc_for_city(row)
         free = city_qualifies_free_shipping(row)
         options.append(
             {
@@ -350,6 +477,8 @@ def shipping_city_options(*, leopard_only: bool = True) -> list[dict[str, Any]]:
                 "has_leopard": leopard,
                 "is_punjab": is_punjab_city_name(str(row.get("name") or "")),
                 "free_shipping": free,
+                "courier_dc": str(estimated) if estimated is not None else None,
+                "standard_dc": str(standard_dc),
                 "shipping": free_rate if free else paid_rate,
                 "couriers": [
                     {
@@ -692,104 +821,260 @@ def fetch_all_payments(**filters) -> list[dict[str, Any]]:
     return rows
 
 
-def sync_payment_audits(**filters) -> dict[str, Any]:
+def fetch_flaship_orders(*, page: int = 1, page_size: int = 50, search: str = "") -> dict[str, Any]:
+    """GET /api/integration/orders/ — booked / in-transit / delivered CNs."""
+    if not _api_key():
+        return {"success": False, "count": 0, "results": [], "message": "FLASHIP_API_KEY missing"}
+    params = {"page": page, "page_size": page_size}
+    if search:
+        params["search"] = search
+    try:
+        res = requests.get(_orders_url(), headers=_headers(), params=params, timeout=40)
+        data = res.json()
+    except Exception as exc:
+        logger.exception("Flaship orders fetch failed")
+        return {"success": False, "count": 0, "results": [], "message": str(exc)}
+    if res.status_code >= 400 or not data.get("success"):
+        return {
+            "success": False,
+            "count": 0,
+            "results": list(data.get("orders") or data.get("results") or []),
+            "message": data.get("message") or data.get("detail") or f"HTTP {res.status_code}",
+        }
+    # API may return results or orders
+    if "results" not in data and "orders" in data:
+        data = {**data, "results": data.get("orders") or []}
+    return data
+
+
+def fetch_all_flaship_orders(**filters) -> list[dict[str, Any]]:
+    page = 1
+    page_size = int(filters.pop("page_size", 50) or 50)
+    rows: list[dict[str, Any]] = []
+    while True:
+        payload = fetch_flaship_orders(page=page, page_size=page_size, **filters)
+        if not payload.get("success"):
+            logger.error("Flaship orders page %s failed: %s", page, payload.get("message"))
+            break
+        batch = list(payload.get("results") or payload.get("orders") or [])
+        rows.extend(batch)
+        total = int(payload.get("count") or 0)
+        if not batch or (total and len(rows) >= total):
+            break
+        page += 1
+        if page > 200:
+            break
+    return rows
+
+
+def _upsert_cn_audit_from_payment(row: dict[str, Any]) -> tuple[bool, bool]:
+    """Returns (created, updated)."""
+    from .models import FlashipCnAudit, Order
+
+    cn = str(row.get("tracking_number") or "").strip()
+    if not cn:
+        return False, False
+
+    courier_total = _dec(row.get("total_charges"))
+    courier_delivery = _dec(row.get("delivery_charges"))
+    courier_service = _dec(row.get("service_charges"))
+    courier_osa = _dec(row.get("osa_charges"))
+    courier_core = _dec(row.get("core_charges"))
+    income_tax = _dec(row.get("income_tax"))
+    withholding_tax = _dec(row.get("withholding_tax"))
+    cod_amount = _dec(row.get("cod_amount"))
+    line_net = _dec(row.get("line_net"))
+    paid_amount = _dec(row.get("paid_amount")) if row.get("paid_amount") not in (None, "") else None
+
+    order = (
+        Order.objects.filter(flaship_tracking_number=cn).first()
+        or Order.objects.filter(order_number=str(row.get("external_ref_no") or "").strip()).first()
+    )
+
+    customer_shipping = Decimal("0.00")
+    order_subtotal = Decimal("0.00")
+    order_total = Decimal("0.00")
+    order_number = ""
+    if order:
+        customer_shipping = _dec(order.shipping)
+        order_subtotal = _dec(order.subtotal)
+        order_total = _dec(order.total_amount)
+        order_number = order.order_number
+
+    shipping_profit = customer_shipping - courier_total
+    if customer_shipping > 0:
+        shipping_margin_pct = (shipping_profit / customer_shipping) * Decimal("100")
+    else:
+        shipping_margin_pct = Decimal("0.00") if courier_total == 0 else Decimal("-100.00")
+
+    contribution = order_subtotal - courier_total
+    if order_subtotal > 0:
+        contribution_margin_pct = (contribution / order_subtotal) * Decimal("100")
+    else:
+        contribution_margin_pct = Decimal("0.00")
+
+    shipment_status = str(
+        row.get("shipment_status") or row.get("status") or ""
+    )[:40]
+
+    defaults = {
+        "order": order,
+        "order_number": order_number,
+        "external_ref_no": str(row.get("external_ref_no") or "")[:64],
+        "courier_code": str(row.get("courier_code") or "")[:32],
+        "shipment_status": shipment_status,
+        "finance_status": str(row.get("finance_status") or "")[:40],
+        "settlement_status": str(row.get("settlement_status") or "")[:40],
+        "settlement_date": str(row.get("settlement_date") or "")[:32],
+        "cheque_no": str(row.get("cheque_no") or "")[:64],
+        "arrival_weight": str(row.get("arrival_weight") or "")[:20],
+        "cod_amount": cod_amount,
+        "paid_amount": paid_amount,
+        "line_net": line_net,
+        "delivery_charges": courier_delivery,
+        "service_charges": courier_service,
+        "osa_charges": courier_osa,
+        "core_charges": courier_core,
+        "income_tax": income_tax,
+        "withholding_tax": withholding_tax,
+        "total_charges": courier_total,
+        "customer_shipping": customer_shipping,
+        "order_subtotal": order_subtotal,
+        "order_total": order_total,
+        "shipping_profit": shipping_profit,
+        "shipping_margin_pct": shipping_margin_pct.quantize(Decimal("0.01")),
+        "contribution_profit": contribution,
+        "contribution_margin_pct": contribution_margin_pct.quantize(Decimal("0.01")),
+        "raw_payload": row,
+    }
+
+    _obj, was_created = FlashipCnAudit.objects.update_or_create(
+        tracking_number=cn,
+        defaults=defaults,
+    )
+    return was_created, not was_created
+
+
+def _upsert_cn_audit_from_order(row: dict[str, Any]) -> tuple[bool, bool]:
     """
-    Pull Flaship payments into FlashipCnAudit and compute margin / profit vs store Order.
+    Ensure on-route / booked Flaship orders appear in audit even before payment rows.
+    Does not wipe existing charge fields if payment sync already filled them.
     """
     from .models import FlashipCnAudit, Order
 
-    rows = fetch_all_payments(**filters)
-    created = updated = 0
+    cn = str(row.get("tracking_number") or "").strip()
+    if not cn:
+        return False, False
 
-    for row in rows:
-        cn = str(row.get("tracking_number") or "").strip()
-        if not cn:
-            continue
+    order = (
+        Order.objects.filter(flaship_tracking_number=cn).first()
+        or Order.objects.filter(order_number=str(row.get("external_ref_no") or "").strip()).first()
+    )
 
-        courier_total = _dec(row.get("total_charges"))
-        courier_delivery = _dec(row.get("delivery_charges"))
-        courier_service = _dec(row.get("service_charges"))
-        courier_osa = _dec(row.get("osa_charges"))
-        courier_core = _dec(row.get("core_charges"))
-        income_tax = _dec(row.get("income_tax"))
-        withholding_tax = _dec(row.get("withholding_tax"))
-        cod_amount = _dec(row.get("cod_amount"))
-        line_net = _dec(row.get("line_net"))
-        paid_amount = _dec(row.get("paid_amount")) if row.get("paid_amount") not in (None, "") else None
+    existing = FlashipCnAudit.objects.filter(tracking_number=cn).first()
+    status = str(row.get("status") or row.get("shipment_status") or "")[:40]
+    courier = str(row.get("courier_code") or "")[:32]
+    cod_amount = _dec(row.get("cod_amount"))
+    ext = str(row.get("external_ref_no") or "")[:64]
 
-        order = (
-            Order.objects.filter(flaship_tracking_number=cn).first()
-            or Order.objects.filter(order_number=str(row.get("external_ref_no") or "").strip()).first()
-        )
+    customer_shipping = _dec(order.shipping) if order else Decimal("0.00")
+    order_subtotal = _dec(order.subtotal) if order else Decimal("0.00")
+    order_total = _dec(order.total_amount) if order else Decimal("0.00")
+    order_number = order.order_number if order else ""
 
-        customer_shipping = Decimal("0.00")
-        order_subtotal = Decimal("0.00")
-        order_total = Decimal("0.00")
-        order_number = ""
+    if existing:
+        # Keep charge math; refresh live status / COD / links
+        existing.shipment_status = status or existing.shipment_status
+        existing.courier_code = courier or existing.courier_code
+        if cod_amount:
+            existing.cod_amount = cod_amount
+        if ext:
+            existing.external_ref_no = ext
         if order:
-            customer_shipping = _dec(order.shipping)
-            order_subtotal = _dec(order.subtotal)
-            order_total = _dec(order.total_amount)
-            order_number = order.order_number
+            existing.order = order
+            existing.order_number = order_number
+            existing.customer_shipping = customer_shipping
+            existing.order_subtotal = order_subtotal
+            existing.order_total = order_total
+            existing.shipping_profit = customer_shipping - existing.total_charges
+            if customer_shipping > 0:
+                existing.shipping_margin_pct = (
+                    existing.shipping_profit / customer_shipping * Decimal("100")
+                ).quantize(Decimal("0.01"))
+            existing.contribution_profit = order_subtotal - existing.total_charges
+            if order_subtotal > 0:
+                existing.contribution_margin_pct = (
+                    existing.contribution_profit / order_subtotal * Decimal("100")
+                ).quantize(Decimal("0.01"))
+        payload = dict(existing.raw_payload or {})
+        payload["order_snapshot"] = row
+        existing.raw_payload = payload
+        existing.save()
+        return False, True
 
-        # Shipping margin: what customer paid as DC vs courier CN charges
-        shipping_profit = customer_shipping - courier_total
-        if customer_shipping > 0:
-            shipping_margin_pct = (shipping_profit / customer_shipping) * Decimal("100")
-        else:
-            # Free shipping for customer → full courier cost is margin loss
-            shipping_margin_pct = Decimal("0.00") if courier_total == 0 else Decimal("-100.00")
+    # New row from orders list (charges unknown yet → 0 until payments sync)
+    courier_total = Decimal("0.00")
+    shipping_profit = customer_shipping - courier_total
+    contribution = order_subtotal - courier_total
+    FlashipCnAudit.objects.create(
+        tracking_number=cn,
+        order=order,
+        order_number=order_number,
+        external_ref_no=ext,
+        courier_code=courier,
+        shipment_status=status,
+        finance_status="",
+        settlement_status="Pending",
+        cod_amount=cod_amount,
+        total_charges=courier_total,
+        delivery_charges=Decimal("0.00"),
+        customer_shipping=customer_shipping,
+        order_subtotal=order_subtotal,
+        order_total=order_total,
+        shipping_profit=shipping_profit,
+        shipping_margin_pct=(
+            (shipping_profit / customer_shipping * Decimal("100")).quantize(Decimal("0.01"))
+            if customer_shipping > 0
+            else Decimal("0.00")
+        ),
+        contribution_profit=contribution,
+        contribution_margin_pct=(
+            (contribution / order_subtotal * Decimal("100")).quantize(Decimal("0.01"))
+            if order_subtotal > 0
+            else Decimal("0.00")
+        ),
+        raw_payload={"order_snapshot": row},
+    )
+    return True, False
 
-        # Contribution after courier: product revenue minus CN charges
-        contribution = order_subtotal - courier_total
-        if order_subtotal > 0:
-            contribution_margin_pct = (contribution / order_subtotal) * Decimal("100")
-        else:
-            contribution_margin_pct = Decimal("0.00")
 
-        defaults = {
-            "order": order,
-            "order_number": order_number,
-            "external_ref_no": str(row.get("external_ref_no") or "")[:64],
-            "courier_code": str(row.get("courier_code") or "")[:32],
-            "shipment_status": str(row.get("shipment_status") or "")[:40],
-            "finance_status": str(row.get("finance_status") or "")[:40],
-            "settlement_status": str(row.get("settlement_status") or "")[:40],
-            "settlement_date": str(row.get("settlement_date") or "")[:32],
-            "cheque_no": str(row.get("cheque_no") or "")[:64],
-            "arrival_weight": str(row.get("arrival_weight") or "")[:20],
-            "cod_amount": cod_amount,
-            "paid_amount": paid_amount,
-            "line_net": line_net,
-            "delivery_charges": courier_delivery,
-            "service_charges": courier_service,
-            "osa_charges": courier_osa,
-            "core_charges": courier_core,
-            "income_tax": income_tax,
-            "withholding_tax": withholding_tax,
-            "total_charges": courier_total,
-            "customer_shipping": customer_shipping,
-            "order_subtotal": order_subtotal,
-            "order_total": order_total,
-            "shipping_profit": shipping_profit,
-            "shipping_margin_pct": shipping_margin_pct.quantize(Decimal("0.01")),
-            "contribution_profit": contribution,
-            "contribution_margin_pct": contribution_margin_pct.quantize(Decimal("0.01")),
-            "raw_payload": row,
-        }
+def sync_payment_audits(**filters) -> dict[str, Any]:
+    """
+    Sync Flaship into admin audit:
+    1) payments API → CN charges + margin
+    2) orders API → on-route / booked CNs (so in-transit shows even before settlement)
+    """
+    payment_rows = fetch_all_payments(**filters)
+    order_rows = fetch_all_flaship_orders()
 
-        obj, was_created = FlashipCnAudit.objects.update_or_create(
-            tracking_number=cn,
-            defaults=defaults,
-        )
-        if was_created:
-            created += 1
-        else:
-            updated += 1
+    created = updated = 0
+    for row in payment_rows:
+        c, u = _upsert_cn_audit_from_payment(row)
+        created += int(c)
+        updated += int(u)
+
+    orders_created = orders_updated = 0
+    for row in order_rows:
+        c, u = _upsert_cn_audit_from_order(row)
+        orders_created += int(c)
+        orders_updated += int(u)
 
     return {
         "ok": True,
-        "fetched": len(rows),
+        "fetched": len(payment_rows),
         "created": created,
         "updated": updated,
+        "orders_fetched": len(order_rows),
+        "orders_created": orders_created,
+        "orders_updated": orders_updated,
     }

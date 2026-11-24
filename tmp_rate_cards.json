@@ -1,0 +1,663 @@
+﻿{
+    "success":  true,
+    "couriers":  [
+                     {
+                         "courier_code":  "alfa",
+                         "courier_name":  "Alfa",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  360,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overland",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "5.000",
+                                                "charges":  400,
+                                                "additional_charges":  80,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  220,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  220,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  220,
+                                                "additional_charges":  125,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  220,
+                                                "additional_charges":  125,
+                                                "fuel_charges_percent":  "30.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "ahl",
+                         "courier_name":  "AHL",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "daak",
+                         "courier_name":  "Daak",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  200,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  200,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  200,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  200,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "dastaq",
+                         "courier_name":  "Dastaq",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  260,
+                                                "additional_charges":  82,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overland",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "5.000",
+                                                "charges":  334,
+                                                "additional_charges":  67,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "daewoo",
+                         "courier_name":  "Daewoo",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  172,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "15.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  172,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "15.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  172,
+                                                "additional_charges":  105,
+                                                "fuel_charges_percent":  "15.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  172,
+                                                "additional_charges":  105,
+                                                "fuel_charges_percent":  "15.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "daewoo_eco",
+                         "courier_name":  "Daewoo Eco",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  181,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  181,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  181,
+                                                "additional_charges":  130,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  181,
+                                                "additional_charges":  130,
+                                                "fuel_charges_percent":  "30.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "dex",
+                         "courier_name":  "DEX",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "leopard",
+                         "courier_name":  "Leopard",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  260,
+                                                "additional_charges":  82,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overland",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "5.000",
+                                                "charges":  334,
+                                                "additional_charges":  67,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  134,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  134,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  134,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  134,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "mnp",
+                         "courier_name":  "M\u0026P",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  260,
+                                                "additional_charges":  82,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  134,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  134,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  134,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  134,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "mnp_two",
+                         "courier_name":  "M\u0026P Two",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  400,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  200,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  200,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  200,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  200,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "tcs_vol",
+                         "courier_name":  "TCS Vol",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "1.500",
+                                                "charges":  200,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "25.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "1.500",
+                                                "charges":  200,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "25.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "tcs",
+                         "courier_name":  "TCS",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  271,
+                                                "additional_charges":  86,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  178,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  178,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  178,
+                                                "additional_charges":  108,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  178,
+                                                "additional_charges":  108,
+                                                "fuel_charges_percent":  "40.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "tcs_cross",
+                         "courier_name":  "TCS Cross",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  271,
+                                                "additional_charges":  86,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  178,
+                                                "additional_charges":  108,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  178,
+                                                "additional_charges":  108,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  178,
+                                                "additional_charges":  108,
+                                                "fuel_charges_percent":  "40.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  178,
+                                                "additional_charges":  108,
+                                                "fuel_charges_percent":  "40.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "tranzo",
+                         "courier_name":  "Tranzo",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  360,
+                                                "additional_charges":  100,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  220,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  220,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  220,
+                                                "additional_charges":  125,
+                                                "fuel_charges_percent":  "30.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  220,
+                                                "additional_charges":  125,
+                                                "fuel_charges_percent":  "30.00"
+                                            }
+                                        ]
+                     },
+                     {
+                         "courier_code":  "trax",
+                         "courier_name":  "Trax",
+                         "rate_cards":  [
+                                            {
+                                                "service_type":  "detain",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "3.000",
+                                                "charges":  260,
+                                                "additional_charges":  82,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overland",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "5.000",
+                                                "charges":  334,
+                                                "additional_charges":  67,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.000",
+                                                "weight_to_kg":  "0.500",
+                                                "charges":  186,
+                                                "additional_charges":  0,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            },
+                                            {
+                                                "service_type":  "overnight",
+                                                "weight_from_kg":  "0.500",
+                                                "weight_to_kg":  "1.000",
+                                                "charges":  186,
+                                                "additional_charges":  104,
+                                                "fuel_charges_percent":  "16.00"
+                                            }
+                                        ]
+                     }
+                 ]
+}

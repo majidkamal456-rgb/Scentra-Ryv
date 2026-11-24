@@ -432,8 +432,8 @@ def is_remote_city(city, address=None):
 
 def calculate_shipping(quantity, city=None, address=None):
     """
-    Free (no DC): Flaship Leopard cities in Punjab / ICT.
-    Paid: all other cities — SHIPPING_OTHER_RATE (Rs. 200–250).
+    Free (no DC): Punjab/ICT cities, or Leopard DC incl. fuel+ST <= ~181.
+    Paid: all other cities — SHIPPING_OTHER_RATE (Rs. 200).
     """
     quantity = int(quantity or 0)
     if quantity <= 0:

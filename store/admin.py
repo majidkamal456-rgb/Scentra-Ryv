@@ -475,8 +475,11 @@ class FlashipCnAuditAdmin(admin.ModelAdmin):
             self.message_user(
                 request,
                 (
-                    f"Synced Flaship payments: fetched {result['fetched']}, "
-                    f"created {result['created']}, updated {result['updated']}."
+                    f"Payments: {result.get('fetched', 0)} fetched "
+                    f"({result.get('created', 0)} new, {result.get('updated', 0)} updated). "
+                    f"Orders/CN: {result.get('orders_fetched', 0)} fetched "
+                    f"({result.get('orders_created', 0)} new, {result.get('orders_updated', 0)} updated). "
+                    f"On-route CNs ab list mein dikhne chahiye."
                 ),
                 level=messages.SUCCESS,
             )

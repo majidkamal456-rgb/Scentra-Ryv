@@ -115,12 +115,14 @@ def site_config(request):
 @api_view(['GET'])
 def shipping_cities(request):
     """
-    Flaship GET /cities/ → Leopard cities only.
+    Flaship GET /cities/ → Leopard-operating cities only.
 
-    Punjab Leopard cities → free shipping (DC 0).
-    Other Leopard cities → paid DC (SHIPPING_OTHER_RATE, Rs. 200–250).
+    Free shipping (DC 0):
+      - Punjab / ICT Leopard cities, OR
+      - Leopard destinations where inclusive DC (fuel + ST) <= ~181
+    Else: SHIPPING_OTHER_RATE (Rs. 200).
     """
-    from .flaship import shipping_city_options
+    from .flaship import estimate_leopard_inclusive_dc, shipping_city_options
 
     q = (request.query_params.get('q') or '').strip()
     free_only = (request.query_params.get('free') or '').lower() in ('1', 'true', 'yes')
@@ -135,14 +137,23 @@ def shipping_cities(request):
             if needle in (c.get('name') or '').lower()
             or needle in (c.get('normalized_name') or '').lower()
         ]
+    free_dc_max = str(getattr(settings, 'FLASHIP_FREE_DC_MAX', '181'))
+    try:
+        standard_dc = str(estimate_leopard_inclusive_dc())
+    except Exception:
+        standard_dc = free_dc_max
     return Response(
         {
             'success': True,
             'count': len(options),
-            'courier': 'leopard',
             'shipping_free': str(settings.SHIPPING_NEARBY_RATE),
             'shipping_paid': str(settings.SHIPPING_OTHER_RATE),
-            'rule': 'Free for Leopard + Punjab/ICT; else paid DC',
+            'free_dc_max': free_dc_max,
+            'standard_leopard_dc': standard_dc,
+            'rule': (
+                f'Free for Punjab/ICT, or Leopard DC incl. fuel+ST <= {free_dc_max}; '
+                f'else Rs. {settings.SHIPPING_OTHER_RATE}'
+            ),
             'cities': options,
         }
     )

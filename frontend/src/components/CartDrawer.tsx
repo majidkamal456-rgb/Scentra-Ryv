@@ -137,7 +137,7 @@ export function CartDrawer({ open, onClose }: Props) {
             Buy 1 perfume · get a free tester
           </p>
           <p className="mt-1 text-center text-[10px] tracking-wider text-[var(--muted)] uppercase">
-            Free on Leopard cities · Rs. 200 elsewhere
+            Rs. 181 Leopard areas free · Rs. 200 elsewhere
           </p>
         </div>
       </aside>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { CitySelect } from "@/components/CitySelect";
 import { fetchProductMeta } from "@/data/productMeta";
 import { formatPrice, products } from "@/data/products";
 import { apiGet, apiPostJson, type CheckoutResponse } from "@/lib/api";
@@ -33,10 +34,7 @@ export default function CheckoutPage() {
   const [testerSlugs, setTesterSlugs] = useState<string[]>([]);
   const [cities, setCities] = useState<ShippingCity[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
-  const [cityQuery, setCityQuery] = useState("");
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
-  const [isOtherCity, setIsOtherCity] = useState(false);
-  const [otherCity, setOtherCity] = useState("");
   const [address, setAddress] = useState("");
   const safeItems = hydrated ? items : [];
 
@@ -44,32 +42,17 @@ export default function CheckoutPage() {
     () => cities.find((c) => c.id === selectedCityId) ?? null,
     [cities, selectedCityId],
   );
-  const city = isOtherCity ? otherCity.trim() : selectedCity?.name?.trim() || "";
+  const city = selectedCity?.name?.trim() || "";
 
   const paidUnits = useMemo(
     () => safeItems.reduce((n, i) => n + i.quantity, 0),
     [safeItems],
   );
 
-  const shipping = useMemo(
-    () => estimateShippingForCity(selectedCity, isOtherCity),
-    [selectedCity, isOtherCity],
-  );
+  const shipping = useMemo(() => estimateShippingForCity(selectedCity), [selectedCity]);
   const cartSubtotal = hydrated ? subtotal() : 0;
   const orderTotal = cartSubtotal + shipping;
-  const freeDelivery = hasFreeShipping(selectedCity) && !isOtherCity;
-
-  const filteredCities = useMemo(() => {
-    const q = cityQuery.trim().toLowerCase();
-    const pool = q
-      ? cities.filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.normalized_name.toLowerCase().includes(q),
-        )
-      : cities.filter((c) => hasFreeShipping(c) || c.has_leopard);
-    return pool.slice(0, 80);
-  }, [cities, cityQuery]);
+  const freeDelivery = hasFreeShipping(selectedCity);
 
   const testerSlots: TesterSlot[] = useMemo(() => {
     const slots: TesterSlot[] = [];
@@ -172,11 +155,8 @@ export default function CheckoutPage() {
         return id;
       });
 
-      const cityForOrder = city.trim();
-      if (!isOtherCity && !selectedCity) throw new Error("Please select your city.");
-      if (isOtherCity && !cityForOrder) {
-        throw new Error("Please enter your city name.");
-      }
+      if (!selectedCity) throw new Error("Please select your city from the list.");
+      const cityForOrder = selectedCity.name.trim();
 
       const res = await apiPostJson<CheckoutResponse>("/checkout/", {
         full_name: String(fd.get("name") || "").trim(),
@@ -236,91 +216,13 @@ export default function CheckoutPage() {
               <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
                 City
               </span>
-              {citiesLoading ? (
-                <p className="text-sm text-[var(--muted)]">Loading cities…</p>
-              ) : (
-                <>
-                  <input
-                    type="search"
-                    value={cityQuery}
-                    onChange={(e) => {
-                      setCityQuery(e.target.value);
-                      setIsOtherCity(false);
-                    }}
-                    placeholder="Search your city"
-                    className="input-field"
-                    autoComplete="address-level2"
-                  />
-                  <div className="mt-2 max-h-48 overflow-y-auto border border-[var(--border)]">
-                    {filteredCities.length === 0 ? (
-                      <p className="px-3 py-2 text-xs text-[var(--muted)]">No match — use Other city.</p>
-                    ) : (
-                      filteredCities.map((c) => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCityId(c.id);
-                            setCityQuery(c.name);
-                            setIsOtherCity(false);
-                            setOtherCity("");
-                          }}
-                          className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-[color-mix(in_srgb,var(--gold)_12%,transparent)] ${
-                            selectedCityId === c.id ? "bg-[color-mix(in_srgb,var(--gold)_16%,transparent)]" : ""
-                          }`}
-                        >
-                          <span>{c.name}</span>
-                          <span className="text-[10px] tracking-wide text-[var(--gold)] uppercase">
-                            {hasFreeShipping(c) ? "Free delivery" : `Rs. ${SHIPPING_OTHER}`}
-                          </span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsOtherCity(true);
-                      setSelectedCityId(null);
-                      setCityQuery("");
-                    }}
-                    className={`mt-2 w-full border px-3 py-2 text-left text-sm ${
-                      isOtherCity
-                        ? "border-[var(--gold)] text-[var(--gold)]"
-                        : "border-[var(--border)] text-[var(--muted)]"
-                    }`}
-                  >
-                    Other city / area (Rs. {SHIPPING_OTHER} shipping)
-                  </button>
-                  {selectedCity && !isOtherCity ? (
-                    <p className="mt-1.5 text-[11px] text-[var(--muted)]">
-                      Selected: <strong className="text-[var(--fg)]">{selectedCity.name}</strong>
-                      {freeDelivery
-                        ? " · free delivery (Punjab)"
-                        : ` · Rs. ${SHIPPING_OTHER} shipping`}
-                    </p>
-                  ) : (
-                    <p className="mt-1.5 text-[11px] text-[var(--muted)]">
-                      Free delivery for Punjab Leopard cities · else Rs. {SHIPPING_OTHER}.
-                    </p>
-                  )}
-                </>
-              )}
+              <CitySelect
+                cities={cities}
+                loading={citiesLoading}
+                selectedId={selectedCityId}
+                onSelect={(c) => setSelectedCityId(c?.id ?? null)}
+              />
             </div>
-            {isOtherCity ? (
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] tracking-[0.16em] text-[var(--muted)] uppercase">
-                  Your city / area
-                </span>
-                <input
-                  required
-                  value={otherCity}
-                  onChange={(e) => setOtherCity(e.target.value)}
-                  placeholder="Type your city name"
-                  className="input-field"
-                />
-              </label>
-            ) : null}
             <input type="hidden" name="city" value={city} />
             <input type="hidden" name="flaship_city_id" value={selectedCity?.id ?? ""} />
             <Field label="Email (optional)" name="email" type="email" />
@@ -432,9 +334,9 @@ export default function CheckoutPage() {
           <div className="mt-3 flex justify-between text-sm">
             <span className="text-[var(--muted)]">
               Shipping
-              {selectedCity || isOtherCity ? (
+              {selectedCity ? (
                 <span className="mt-0.5 block text-[10px] tracking-wide normal-case">
-                  {freeDelivery ? "Free delivery (Punjab)" : `Rs. ${SHIPPING_OTHER} shipping`}
+                  {freeDelivery ? "Free delivery" : `Rs. ${SHIPPING_OTHER} shipping`}
                 </span>
               ) : (
                 <span className="mt-0.5 block text-[10px] tracking-wide normal-case">
@@ -443,18 +345,18 @@ export default function CheckoutPage() {
               )}
             </span>
             <span className="text-[var(--gold)]">
-              {selectedCity || isOtherCity ? formatPrice(shipping) : "—"}
+              {selectedCity ? formatPrice(shipping) : "—"}
             </span>
           </div>
           <div className="mt-4 flex justify-between border-t border-[var(--border)] pt-4">
             <span className="text-[var(--muted)]">Total</span>
             <span className="font-serif text-xl text-[var(--gold)]">
-              {selectedCity || isOtherCity ? formatPrice(orderTotal) : formatPrice(cartSubtotal)}
+              {selectedCity ? formatPrice(orderTotal) : formatPrice(cartSubtotal)}
             </span>
           </div>
           <p className="mt-3 text-xs text-[var(--muted)]">
-            {paidUnits} free tester{paidUnits > 1 ? "s" : ""} · Punjab free · else Rs.{" "}
-            {SHIPPING_OTHER}
+            {paidUnits} free tester{paidUnits > 1 ? "s" : ""} · Rs. 181 Leopard areas free ·
+            else Rs. {SHIPPING_OTHER}
           </p>
         </aside>
       </div>

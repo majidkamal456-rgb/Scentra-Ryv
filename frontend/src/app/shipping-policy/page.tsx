@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Shipping policy",
   description:
-    "Scentra Ryv shipping — free delivery on Flaship Leopard-mapped cities, Rs. 200 elsewhere. Cash on Delivery nationwide.",
+    "Scentra Ryv shipping — free where Leopard DC is Rs. 181 (incl. fuel + ST), Rs. 200 elsewhere. Cash on Delivery nationwide.",
 };
 
 export default function ShippingPolicyPage() {
@@ -17,13 +17,13 @@ export default function ShippingPolicyPage() {
           business days; remote areas may take slightly longer.
         </p>
         <p>
-          <strong className="text-[var(--fg)]">Free delivery</strong> for cities where{" "}
-          <strong className="text-[var(--fg)]">Leopard Couriers</strong> is mapped on our Flaship
-          account (shown as Free · Leopard at checkout).
+          <strong className="text-[var(--fg)]">Free delivery</strong> for destinations where
+          Leopard DC is about <strong className="text-[var(--fg)]">Rs. 181</strong> (incl. 16% ST
+          + fuel) — shown as free at checkout.
         </p>
         <p>
-          <strong className="text-[var(--fg)]">Rs. 200 shipping</strong> for cities without Leopard
-          mapping, or if you choose &quot;Other city / area&quot;.
+          <strong className="text-[var(--fg)]">Rs. 200 shipping</strong> for cities where Leopard
+          DC is higher than Rs. 181 (remote / out-of-zone areas).
         </p>
         <p>
           <strong className="text-[var(--fg)]">Cash on Delivery</strong> is available on eligible

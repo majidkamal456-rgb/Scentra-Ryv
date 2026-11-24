@@ -71,7 +71,7 @@ export default function CartPage() {
               <span className="font-serif text-2xl text-[var(--gold)]">{formatPrice(subtotal())}</span>
             </p>
             <p className="text-xs text-[var(--muted)]">
-              Free on Leopard cities · Rs. 200 elsewhere · COD
+              Rs. 181 Leopard areas free · Rs. 200 elsewhere · COD
             </p>
             <Link href="/checkout" className="btn-gold">
               Proceed to checkout
