@@ -273,4 +273,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    # Public Next.js storefront API — no session auth (avoids CSRF on JSON POSTs).
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
