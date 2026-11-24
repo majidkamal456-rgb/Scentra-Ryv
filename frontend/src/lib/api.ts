@@ -98,6 +98,7 @@ export type CheckoutResponse = {
   subtotal: string;
   status: string;
   payment_method: string;
+  free_tester_name?: string | null;
 };
 
 export type ApiOrder = {
@@ -112,6 +113,7 @@ export type ApiOrder = {
   shipping: string;
   total_amount: string;
   created_at?: string;
+  free_tester_name?: string | null;
   items: Array<{
     product_name: string;
     size_ml: string;

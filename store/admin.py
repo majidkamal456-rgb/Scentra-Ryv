@@ -75,6 +75,7 @@ class OrderAdmin(admin.ModelAdmin):
         'order_number',
         'full_name',
         'phone',
+        'free_tester_name',
         'payment_method',
         'status',
         'payment_thumbnail',
@@ -99,6 +100,9 @@ class OrderAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Customer', {
             'fields': ('order_number', 'full_name', 'phone', 'email', 'address', 'city', 'notes'),
+        }),
+        ('Offer', {
+            'fields': ('free_tester', 'free_tester_name'),
         }),
         ('Payment', {
             'fields': (

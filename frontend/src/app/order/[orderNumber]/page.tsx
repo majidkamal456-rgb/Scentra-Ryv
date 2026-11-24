@@ -30,11 +30,17 @@ export default async function OrderPage({ params }: Props) {
           <p>
             {order.full_name} · {order.city}
           </p>
+          {order.free_tester_name ? (
+            <p className="mt-3 text-[var(--gold)]">
+              Free tester included: {order.free_tester_name}
+            </p>
+          ) : null}
           <ul className="mt-4 space-y-1 text-left">
             {order.items.map((item, i) => (
               <li key={`${item.product_name}-${i}`} className="flex justify-between gap-4 border-b border-[var(--border)] py-2">
                 <span>
                   {item.product_name} × {item.quantity}
+                  {item.size_ml ? ` · ${item.size_ml}` : ""}
                 </span>
                 <span>Rs. {Number(item.line_total).toLocaleString("en-PK")}</span>
               </li>

@@ -17,6 +17,8 @@ export type CartItem = {
 
 type CartState = {
   items: CartItem[];
+  /** Bumps when add() runs so UI can open the cart sheet. */
+  openRequest: number;
   add: (product: Product, quantity?: number) => void;
   update: (productId: string, quantity: number) => void;
   remove: (productId: string) => void;
@@ -29,32 +31,29 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      openRequest: 0,
       add: (product, quantity = 1) => {
         set((state) => {
           const existing = state.items.find((i) => i.productId === product.id);
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
+          const items = existing
+            ? state.items.map((i) =>
                 i.productId === product.id
                   ? { ...i, quantity: i.quantity + quantity }
                   : i,
-              ),
-            };
-          }
-          return {
-            items: [
-              ...state.items,
-              {
-                productId: product.id,
-                slug: product.slug,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                sizeMl: product.sizeMl,
-                quantity,
-              },
-            ],
-          };
+              )
+            : [
+                ...state.items,
+                {
+                  productId: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  price: product.price,
+                  image: product.image,
+                  sizeMl: product.sizeMl,
+                  quantity,
+                },
+              ];
+          return { items, openRequest: state.openRequest + 1 };
         });
       },
       update: (productId, quantity) => {
@@ -76,7 +75,10 @@ export const useCart = create<CartState>()(
       subtotal: () =>
         get().items.reduce((n, i) => n + i.price * i.quantity, 0),
     }),
-    { name: "scentra_cart_v2" },
+    {
+      name: "scentra_cart_v2",
+      partialize: (state) => ({ items: state.items }),
+    },
   ),
 );
 

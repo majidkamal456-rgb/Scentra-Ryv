@@ -95,6 +95,20 @@ def site_config(request):
         'remote_provinces': sorted(REMOTE_PROVINCE_KEYWORDS),
         'remote_city_labels': list(REMOTE_CITY_LABELS),
         'nearby_city_labels': list(NEARBY_CITY_LABELS),
+        'free_tester_offer': {
+            'enabled': getattr(settings, 'FREE_TESTER_OFFER_ENABLED', True),
+            'headline': getattr(
+                settings,
+                'FREE_TESTER_HEADLINE',
+                'Buy any perfume — get a free tester',
+            ),
+            'subtext': getattr(
+                settings,
+                'FREE_TESTER_SUBTEXT',
+                'Choose any fragrance tester free with your order.',
+            ),
+            'size_label': getattr(settings, 'FREE_TESTER_SIZE_LABEL', 'Free Tester'),
+        },
     })
 
 
@@ -108,14 +122,15 @@ def checkout_create(request):
     else:
         payload = dict(request.data)
 
-    # FormData from Next.js sends items as a JSON string
-    items = payload.get('items')
-    if isinstance(items, str):
-        import json
-        try:
-            payload['items'] = json.loads(items)
-        except json.JSONDecodeError:
-            return Response({'items': 'Invalid items payload.'}, status=status.HTTP_400_BAD_REQUEST)
+    # FormData / JSON may send nested lists as JSON strings
+    import json
+    for key in ('items', 'free_tester_product_ids'):
+        raw = payload.get(key)
+        if isinstance(raw, str):
+            try:
+                payload[key] = json.loads(raw)
+            except json.JSONDecodeError:
+                return Response({key: f'Invalid {key} payload.'}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = CheckoutSerializer(data=payload)
     if not serializer.is_valid():
@@ -126,6 +141,10 @@ def checkout_create(request):
     city = data['city']
     address = data.get('address') or ''
     items_data = data['items']
+    offer_on = getattr(settings, 'FREE_TESTER_OFFER_ENABLED', True)
+    tester_size = getattr(settings, 'FREE_TESTER_SIZE_LABEL', 'Free Tester')
+    paid_qty = data.get('_paid_qty') or sum(int(i['quantity']) for i in items_data)
+    free_tester_ids = list(data.get('free_tester_product_ids') or [])
 
     product_ids = [item['product_id'] for item in items_data]
     products = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
@@ -153,6 +172,31 @@ def checkout_create(request):
         total_qty += qty
         line_items.append((product, qty, size))
 
+    free_testers = []
+    if offer_on:
+        if len(free_tester_ids) != paid_qty:
+            return Response(
+                {
+                    'free_tester_product_ids': (
+                        f'Please choose {paid_qty} free tester'
+                        f'{"s" if paid_qty != 1 else ""} '
+                        f'(one per perfume in your cart).'
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        tester_products = {
+            p.id: p for p in Product.objects.filter(pk__in=set(free_tester_ids))
+        }
+        for tid in free_tester_ids:
+            tester = tester_products.get(tid)
+            if not tester:
+                return Response(
+                    {'free_tester_product_ids': f'Tester product {tid} was not found.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            free_testers.append(tester)
+
     shipping = calculate_shipping(total_qty, city, address=address)
     total = subtotal + shipping
 
@@ -162,6 +206,9 @@ def checkout_create(request):
             {'payment_screenshot': 'Payment screenshot is required for bank transfer.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    primary_tester = free_testers[0] if free_testers else None
+    tester_names = ', '.join(t.name for t in free_testers)
 
     with transaction.atomic():
         order = Order(
@@ -173,6 +220,8 @@ def checkout_create(request):
             notes=data.get('notes') or '',
             payment_method=payment_method,
             payment_screenshot=screenshot,
+            free_tester=primary_tester,
+            free_tester_name=tester_names,
             status=(
                 Order.STATUS_PENDING_COD
                 if payment_method == Order.PAYMENT_COD
@@ -196,6 +245,21 @@ def checkout_create(request):
             product.stock = max(0, product.stock - qty)
             product.save(update_fields=['stock'])
 
+        # Group identical testers into one line when possible
+        from collections import Counter
+        counts = Counter(t.id for t in free_testers)
+        by_id = {t.id: t for t in free_testers}
+        for tid, qty in counts.items():
+            tester = by_id[tid]
+            OrderItem.objects.create(
+                order=order,
+                product=tester,
+                product_name=f'{tester.name} (Free Tester)',
+                size_ml=tester_size,
+                quantity=qty,
+                price_at_purchase=Decimal('0.00'),
+            )
+
     send_order_notification(order)
 
     return Response({
@@ -205,6 +269,7 @@ def checkout_create(request):
         'subtotal': str(order.subtotal),
         'status': order.status,
         'payment_method': order.payment_method,
+        'free_tester_name': order.free_tester_name or None,
     }, status=status.HTTP_201_CREATED)
 
 
@@ -235,6 +300,7 @@ def order_detail(request, order_number):
         'shipping': str(order.shipping),
         'total_amount': str(order.total_amount),
         'created_at': order.created_at.isoformat(),
+        'free_tester_name': order.free_tester_name or None,
         'items': items,
     })
 

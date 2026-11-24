@@ -53,6 +53,9 @@ export function ProductCard({ product }: Props) {
           className="object-cover transition duration-700 group-hover:scale-105"
           sizes="(max-width: 768px) 50vw, 25vw"
         />
+        <span className="absolute top-2.5 left-2.5 z-10 max-w-[calc(100%-1.25rem)] bg-[var(--gold)] px-2 py-1 text-[9px] font-semibold tracking-[0.14em] text-black uppercase shadow-sm sm:top-3 sm:left-3 sm:px-2.5 sm:text-[10px]">
+          Free tester
+        </span>
       </Link>
 
       <div className="relative z-10 border-t border-[var(--border)] bg-[var(--surface)] px-3 py-3.5 sm:px-4 sm:py-4">
@@ -81,7 +84,11 @@ export function ProductCard({ product }: Props) {
           )}
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2">
+        <p className="mt-2 text-[10px] tracking-[0.08em] text-[var(--gold)]/90 uppercase sm:text-[11px]">
+          Buy 1 · get free tester
+        </p>
+
+        <div className="mt-2.5 flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-[var(--gold)] md:text-base">
             {formatPrice(product.price)}
           </p>

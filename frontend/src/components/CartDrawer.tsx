@@ -43,13 +43,13 @@ export function CartDrawer({ open, onClose }: Props) {
         aria-hidden={!open}
       />
       <aside
-        className={`fixed right-0 top-0 z-[85] flex h-full w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--bg)] shadow-2xl transition-transform duration-500 ease-[var(--ease-luxe)] ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`cart-sheet ${open ? "is-open" : ""}`}
         aria-hidden={!open}
         aria-label="Shopping cart"
       >
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
+        <div className="cart-sheet__handle" aria-hidden />
+
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-5 py-3 md:py-4">
           <h2 className="font-serif text-xl tracking-wide">Your cart</h2>
           <button
             type="button"
@@ -61,16 +61,16 @@ export function CartDrawer({ open, onClose }: Props) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-3 md:py-4">
           {!hydrated ? (
-            <p className="py-16 text-center text-[var(--muted)]">Loading cart…</p>
+            <p className="py-8 text-center text-[var(--muted)] md:py-16">Loading cart…</p>
           ) : safeItems.length === 0 ? (
-            <p className="py-16 text-center text-[var(--muted)]">Your cart is empty.</p>
+            <p className="py-8 text-center text-[var(--muted)] md:py-16">Your cart is empty.</p>
           ) : (
-            <ul className="space-y-5">
+            <ul className="space-y-4 md:space-y-5">
               {safeItems.map((item) => (
                 <li key={item.productId} className="flex gap-4">
-                  <div className="relative h-20 w-16 shrink-0 overflow-hidden">
+                  <div className="relative h-16 w-14 shrink-0 overflow-hidden md:h-20 md:w-16">
                     <Image src={item.image} alt={item.name} fill className="object-contain p-1" sizes="64px" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -118,8 +118,8 @@ export function CartDrawer({ open, onClose }: Props) {
           )}
         </div>
 
-        <div className="border-t border-[var(--border)] px-5 py-5">
-          <div className="mb-4 flex justify-between text-sm">
+        <div className="shrink-0 border-t border-[var(--border)] px-5 py-3 md:py-5">
+          <div className="mb-3 flex justify-between text-sm md:mb-4">
             <span className="text-[var(--muted)]">Subtotal</span>
             <span className="font-medium text-[var(--gold)]">{formatPrice(safeSubtotal)}</span>
           </div>
@@ -133,7 +133,10 @@ export function CartDrawer({ open, onClose }: Props) {
           >
             Checkout
           </Link>
-          <p className="mt-3 text-center text-[10px] tracking-wider text-[var(--muted)] uppercase">
+          <p className="mt-2 text-center text-[10px] tracking-wider text-[var(--gold)] uppercase md:mt-3">
+            Buy 1 perfume · get a free tester
+          </p>
+          <p className="mt-1 text-center text-[10px] tracking-wider text-[var(--muted)] uppercase">
             Cash on Delivery · Nationwide
           </p>
         </div>

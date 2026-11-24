@@ -26,7 +26,6 @@ export default function ShopPage() {
       <p className="mt-3 max-w-lg text-[var(--muted)]">
         Six signatures — filter by gender and find your next everyday luxury.
       </p>
-
       <div className="mt-8 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button

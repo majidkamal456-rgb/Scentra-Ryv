@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Cinzel, Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { OfferModal } from "@/components/OfferModal";
+import { PromoTopBar } from "@/components/PromoTopBar";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import "./globals.css";
 
@@ -75,10 +77,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="relative flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)] antialiased">
         <div className="site-noise" aria-hidden="true" />
+        <PromoTopBar />
         <Header />
         <main className="relative z-10 flex-1">{children}</main>
         <Footer />
         <WhatsAppFloat />
+        <OfferModal />
       </body>
     </html>
   );

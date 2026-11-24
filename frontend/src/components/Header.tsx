@@ -17,6 +17,7 @@ const NAV = [
 export function Header() {
   const pathname = usePathname();
   const count = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const openRequest = useCart((s) => s.openRequest);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -33,6 +34,13 @@ export function Header() {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  // Open cart sheet after Add to cart (home / shop / product)
+  useEffect(() => {
+    if (!mounted || openRequest <= 0) return;
+    const t = window.setTimeout(() => setDrawerOpen(true), 350);
+    return () => window.clearTimeout(t);
+  }, [openRequest, mounted]);
 
   return (
     <>

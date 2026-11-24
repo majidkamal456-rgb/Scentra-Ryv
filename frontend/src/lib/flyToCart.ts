@@ -2,7 +2,9 @@
 export function flyToCart(sourceEl: HTMLElement | null, imageSrc: string) {
   if (typeof window === "undefined") return;
 
-  const cart = document.getElementById("header-cart-btn");
+  const cart =
+    document.getElementById("cart-trigger") ||
+    document.getElementById("header-cart-btn");
   if (!sourceEl || !cart) return;
 
   const from = sourceEl.getBoundingClientRect();

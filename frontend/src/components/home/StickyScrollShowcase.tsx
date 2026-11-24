@@ -1,15 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   motion,
+  useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
   type MotionValue,
 } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   formatPrice,
   scrollProducts,
@@ -38,10 +40,12 @@ function BottleLayer({
   product,
   index,
   progress,
+  active,
 }: {
   product: Product;
   index: number;
   progress: MotionValue<number>;
+  active: boolean;
 }) {
   const side = index % 2 === 0 ? 1 : -1;
   const x = useTransform(progress, [0, 0.5, 1], [side * 80, 0, side * -100]);
@@ -52,22 +56,34 @@ function BottleLayer({
 
   return (
     <motion.div
-      className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      className={`absolute inset-0 flex items-center justify-center ${
+        active ? "pointer-events-auto z-20" : "pointer-events-none z-0"
+      }`}
       style={{ opacity }}
     >
       <motion.div
-        className="absolute h-[42vmin] w-[42vmin] rounded-full blur-[80px] md:h-[52vmin] md:w-[52vmin]"
+        className="pointer-events-none absolute h-[42vmin] w-[42vmin] rounded-full blur-[80px] md:h-[52vmin] md:w-[52vmin]"
         style={{ background: product.glow, opacity: glowOpacity, scale }}
       />
-      <motion.div style={{ x, rotate, scale }} className="relative z-10 flex h-[58vh] max-h-[520px] items-center justify-center md:h-[68vh]">
-        <Image
-          src={product.imageCutout}
-          alt={product.name}
-          width={420}
-          height={560}
-          className="h-full w-auto max-w-[min(70vw,340px)] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
-          priority={index < 2}
-        />
+      <motion.div
+        style={{ x, rotate, scale }}
+        className="relative z-10 flex h-[58vh] max-h-[520px] items-center justify-center md:h-[68vh]"
+      >
+        <Link
+          href={`/product/${product.slug}`}
+          className="block h-full"
+          aria-label={`View ${product.name}`}
+          tabIndex={active ? 0 : -1}
+        >
+          <Image
+            src={product.imageCutout}
+            alt={product.name}
+            width={420}
+            height={560}
+            className="h-full w-auto max-w-[min(70vw,340px)] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)] transition hover:brightness-110"
+            priority={index < 2}
+          />
+        </Link>
       </motion.div>
     </motion.div>
   );
@@ -76,9 +92,11 @@ function BottleLayer({
 function TextLayer({
   product,
   progress,
+  active,
 }: {
   product: Product;
   progress: MotionValue<number>;
+  active: boolean;
 }) {
   const add = useCart((s) => s.add);
   const opacity = useTransform(progress, [0, 0.18, 0.55, 0.88], [0, 1, 1, 0]);
@@ -86,11 +104,19 @@ function TextLayer({
   const btnRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <motion.div className="max-w-sm" style={{ opacity, y }}>
+    <motion.div
+      className={`max-w-sm ${active ? "pointer-events-auto relative z-30" : "pointer-events-none"}`}
+      style={{ opacity, y }}
+      aria-hidden={!active}
+    >
       <p className="text-sm text-[var(--muted)]">{genderShort(product.gender)}</p>
-      <h2 className="font-serif mt-1 text-4xl tracking-tight text-[var(--fg)] md:text-5xl lg:text-6xl">
+      <Link
+        href={`/product/${product.slug}`}
+        tabIndex={active ? 0 : -1}
+        className="font-serif mt-1 block text-4xl tracking-tight text-[var(--fg)] transition hover:text-[var(--gold)] md:text-5xl lg:text-6xl"
+      >
         {product.name}
-      </h2>
+      </Link>
       <p className="mt-3 text-sm leading-relaxed text-[var(--muted)] md:text-[15px]">
         Inspired by {product.inspiredBy}. {product.shortDescription}
       </p>
@@ -107,17 +133,27 @@ function TextLayer({
       <p className="font-serif mt-6 text-2xl text-[var(--gold)] md:text-3xl">
         {formatPrice(product.price)}
       </p>
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={() => {
-          flyToCart(btnRef.current, product.imageCutout);
-          add(product);
-        }}
-        className="mt-5 rounded-full bg-[var(--gold)] px-7 py-2.5 text-sm font-medium text-black transition hover:brightness-110"
-      >
-        Add to cart
-      </button>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button
+          ref={btnRef}
+          type="button"
+          disabled={!active}
+          onClick={() => {
+            flyToCart(btnRef.current, product.imageCutout);
+            add(product);
+          }}
+          className="rounded-full bg-[var(--gold)] px-7 py-2.5 text-sm font-medium text-black transition hover:brightness-110 disabled:cursor-default"
+        >
+          Add to cart
+        </button>
+        <Link
+          href={`/product/${product.slug}`}
+          tabIndex={active ? 0 : -1}
+          className="rounded-full border border-[var(--border)] px-5 py-2.5 text-sm text-[var(--muted)] transition hover:border-[var(--gold)] hover:text-[var(--gold)]"
+        >
+          View details
+        </Link>
+      </div>
     </motion.div>
   );
 }
@@ -158,6 +194,7 @@ function Dot({ index, progress }: { index: number; progress: MotionValue<number>
 }
 
 function ChapterStage({ smooth }: { smooth: MotionValue<number> }) {
+  const [active, setActive] = useState(0);
   const p0 = useChapterProgress(smooth, 0);
   const p1 = useChapterProgress(smooth, 1);
   const p2 = useChapterProgress(smooth, 2);
@@ -166,19 +203,27 @@ function ChapterStage({ smooth }: { smooth: MotionValue<number> }) {
   const p5 = useChapterProgress(smooth, 5);
   const progresses = [p0, p1, p2, p3, p4, p5];
 
+  useMotionValueEvent(smooth, "change", (v) => {
+    const idx = Math.min(CHAPTERS - 1, Math.max(0, Math.floor(v * CHAPTERS + 0.001)));
+    setActive((prev) => (prev === idx ? prev : idx));
+  });
+
   return (
     <div className="relative mx-auto grid h-full w-full max-w-6xl grid-cols-1 items-center px-5 pt-8 pb-12 md:grid-cols-[minmax(240px,0.9fr)_1.2fr] md:gap-6 md:px-10 md:pt-12 md:pb-14 lg:px-12">
-      {/* Text — left (reference layout) */}
-      <div className="relative z-20 order-2 min-h-[220px] md:order-1 md:min-h-[320px]">
+      <div className="relative z-30 order-2 min-h-[260px] md:order-1 md:min-h-[320px]">
         {scrollProducts.map((product, i) => (
-          <div key={product.id} className="absolute inset-x-0 top-0 md:top-1/2 md:-translate-y-1/2">
-            <TextLayer product={product} progress={progresses[i]} />
+          <div
+            key={product.id}
+            className={`absolute inset-x-0 top-0 md:top-1/2 md:-translate-y-1/2 ${
+              i === active ? "pointer-events-auto z-20" : "pointer-events-none z-0"
+            }`}
+          >
+            <TextLayer product={product} progress={progresses[i]} active={i === active} />
           </div>
         ))}
       </div>
 
-      {/* Bottle + bg word — center/right */}
-      <div className="relative order-1 h-[46vh] w-full md:order-2 md:h-[78vh]">
+      <div className="pointer-events-none relative order-1 h-[46vh] w-full md:order-2 md:h-[78vh]">
         {scrollProducts.map((product, i) => (
           <BgWord key={`word-${product.id}`} word={product.bgWord} progress={progresses[i]} />
         ))}
@@ -188,6 +233,7 @@ function ChapterStage({ smooth }: { smooth: MotionValue<number> }) {
             product={product}
             index={i}
             progress={progresses[i]}
+            active={i === active}
           />
         ))}
       </div>
@@ -204,7 +250,12 @@ function ReducedList() {
         <div key={product.id} className="grid items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-sm text-[var(--muted)]">{genderShort(product.gender)}</p>
-            <h2 className="font-serif mt-1 text-4xl">{product.name}</h2>
+            <Link
+              href={`/product/${product.slug}`}
+              className="font-serif mt-1 block text-4xl transition hover:text-[var(--gold)]"
+            >
+              {product.name}
+            </Link>
             <p className="mt-3 text-sm text-[var(--muted)]">
               Inspired by {product.inspiredBy}. {product.shortDescription}
             </p>
@@ -221,26 +272,36 @@ function ReducedList() {
             <p className="font-serif mt-5 text-2xl text-[var(--gold)]">
               {formatPrice(product.price)}
             </p>
-            <button
-              type="button"
-              onClick={() => add(product)}
-              className="mt-5 rounded-full bg-[var(--gold)] px-7 py-2.5 text-sm font-medium text-black"
-            >
-              Add to cart
-            </button>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => add(product)}
+                className="rounded-full bg-[var(--gold)] px-7 py-2.5 text-sm font-medium text-black"
+              >
+                Add to cart
+              </button>
+              <Link
+                href={`/product/${product.slug}`}
+                className="rounded-full border border-[var(--border)] px-5 py-2.5 text-sm text-[var(--muted)]"
+              >
+                View details
+              </Link>
+            </div>
           </div>
           <div className="relative flex h-72 items-center justify-center md:h-96">
             <div
               className="absolute h-48 w-48 rounded-full blur-3xl opacity-50"
               style={{ background: product.glow }}
             />
-            <Image
-              src={product.imageCutout}
-              alt={product.name}
-              width={320}
-              height={420}
-              className="relative z-10 h-full w-auto object-contain"
-            />
+            <Link href={`/product/${product.slug}`} className="relative z-10 h-full">
+              <Image
+                src={product.imageCutout}
+                alt={product.name}
+                width={320}
+                height={420}
+                className="h-full w-auto object-contain"
+              />
+            </Link>
           </div>
         </div>
       ))}
@@ -272,15 +333,13 @@ export function StickyScrollShowcase() {
       >
         {!reduced && (
           <>
-            {/* Right progress dots */}
-            <div className="absolute right-4 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-3.5 md:right-8">
+            <div className="pointer-events-none absolute right-4 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-3.5 md:right-8">
               {scrollProducts.map((p, i) => (
                 <Dot key={p.id} index={i} progress={smooth} />
               ))}
             </div>
 
-            {/* Bottom gold progress bar (reference) */}
-            <div className="absolute right-0 bottom-6 left-0 z-30 px-5 md:bottom-8 md:px-10">
+            <div className="pointer-events-none absolute right-0 bottom-6 left-0 z-30 px-5 md:bottom-8 md:px-10">
               <div className="h-px w-full max-w-xs bg-[color-mix(in_srgb,var(--gold)_20%,transparent)]">
                 <motion.div
                   className="h-full origin-left bg-[var(--gold)]"

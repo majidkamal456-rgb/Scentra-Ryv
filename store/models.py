@@ -159,6 +159,19 @@ class Order(models.Model):
     city = models.CharField(max_length=100)
     email = models.EmailField(blank=True)
     notes = models.TextField(blank=True)
+    free_tester = models.ForeignKey(
+        'Product',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='free_tester_orders',
+        help_text='Free tester perfume chosen with this order (Buy 1 Get Free Tester offer).',
+    )
+    free_tester_name = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text='Snapshot of free tester product name at order time.',
+    )
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
     payment_screenshot = models.ImageField(
         upload_to='payment_proofs/',

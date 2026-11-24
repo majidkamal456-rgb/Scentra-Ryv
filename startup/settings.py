@@ -178,6 +178,22 @@ WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '923177478167')
 CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', 'scentraryv@gmail.com')
 ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_EMAIL)
 
+# Buy any perfume → get 1 free tester (customer picks which scent)
+FREE_TESTER_OFFER_ENABLED = os.getenv('FREE_TESTER_OFFER_ENABLED', 'True').lower() in (
+    'true',
+    '1',
+    'yes',
+)
+FREE_TESTER_SIZE_LABEL = os.getenv('FREE_TESTER_SIZE_LABEL', 'Free Tester')
+FREE_TESTER_HEADLINE = os.getenv(
+    'FREE_TESTER_HEADLINE',
+    'Buy any perfume — get a free tester',
+)
+FREE_TESTER_SUBTEXT = os.getenv(
+    'FREE_TESTER_SUBTEXT',
+    'One free tester per perfume you buy — choose any scent at checkout.',
+)
+
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')

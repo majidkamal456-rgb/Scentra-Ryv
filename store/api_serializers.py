@@ -124,6 +124,14 @@ class CheckoutSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True)
     payment_method = serializers.ChoiceField(choices=Order.PAYMENT_CHOICES)
     items = CheckoutItemSerializer(many=True)
+    # One free tester product id per paid perfume unit (length = sum of item quantities)
+    free_tester_product_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        allow_empty=True,
+    )
+    # Back-compat single id
+    free_tester_product_id = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_phone(self, value):
         import re
@@ -137,6 +145,17 @@ class CheckoutSerializer(serializers.Serializer):
         if not value:
             raise serializers.ValidationError('Cart is empty.')
         return value
+
+    def validate(self, attrs):
+        items = attrs.get('items') or []
+        paid_qty = sum(int(i.get('quantity') or 0) for i in items)
+        ids = list(attrs.get('free_tester_product_ids') or [])
+        single = attrs.get('free_tester_product_id')
+        if not ids and single:
+            ids = [single]
+        attrs['free_tester_product_ids'] = ids
+        attrs['_paid_qty'] = paid_qty
+        return attrs
 
 
 class SiteConfigSerializer(serializers.Serializer):
